@@ -1,0 +1,23 @@
+{
+  "name": "ward",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "xstart": "./node_modules/.bin/babel --presets @babel/preset-env index.js",
+    "start": "./node_modules/.bin/babel-node index.js --exec ./node_modules/.bin/babel-node --presets @babel/preset-env",
+    "xdev": "./node_modules/.bin/nodemon src/start.js --exec ./node_modules/.bin/babel-node --presets @babel/preset-env",
+    "xclean": "rm -r dist",
+    "xbuild": "./node_modules/.bin/babel --presets @babel/preset-env src -d dist",
+    "xserve": "npm run build && node dist/start.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/node": "^7.4.5",
+    "@babel/preset-env": "^7.4.5"
+  },
+  "dependencies": {
+    "async": "^3.0.1"
+  }
+}
