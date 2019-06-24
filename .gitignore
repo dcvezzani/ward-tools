@@ -1,6 +1,8 @@
+a*.json
 d*.json
 e*.json
 m*.json
 r*.json
 y*.json
+*.csv
 cookie.txt

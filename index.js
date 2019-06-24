@@ -27,13 +27,14 @@ const process = () => {
       },
       reduceDirectory: (cb) => {
         data.directory = data.directory.reduce((coll, entry) => {
-          console.log(">>>entry", entry)
+          // console.log(">>>entry", entry)
           entry.members.forEach(fmember => {
             const {phone, email, address, district} = entry
-            coll[fmember.name] = { ...fmember, phone, email, address, district }
+            coll[fmember.name] = { phone, email, address, ...fmember, district }
           })
           return coll
         }, {})
+        // console.log(">>>data.directory", data.directory);
         cb()
       },
       eq: (cb) => {
@@ -43,24 +44,53 @@ const process = () => {
           data.eq = JSON.parse(content).map(entry => {
             const directoryEntry = data.directory[entry.name]
             // console.log(">>>directoryEntry", directoryEntry)
-            const {uuid, phone, email, address, district} = directoryEntry;
-            return {...entry, uuid, phone, email, address, district}
+            const {uuid, givenName, surname, phone, email, address, district} = directoryEntry;
+            return {...entry, uuid, givenName, surname, phone, email, address, district}
           })
           // console.log(">>>data.eq", data.eq)
           data.available_brothers = JSON.parse(JSON.stringify(data.eq))
           cb()
         });
       },
+      // available_eq: (cb) => {
+      //   const filtered_eq = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
+      //   data.available_brothers = filtered_eq
+      //   fs.writeFile('available_eq.json', JSON.stringify(filtered_eq), (err) => {
+      //     if (err) return cb(err)
+      //     console.log('The file has been saved!');
+      //     cb()
+      //   });
+      // },
       ym: (cb) => {
         fs.readFile('./ym-cleaned.json', (err, content) => {
           if (err) return cb(err)
           data.ym = JSON.parse(content).map(entry => {
             const directoryEntry = data.directory[entry.name]
-            const {uuid, phone, email, address, district} = directoryEntry;
-            return {...entry, uuid, phone, email, address, district}
+            const {uuid, givenName, surname, phone, email, address, district} = directoryEntry;
+            return {...entry, uuid, givenName, surname, phone, email, address, district}
           })
           // console.log(">>>data.ym", data.ym)
           data.available_brothers = [...data.available_brothers, ...(JSON.parse(JSON.stringify(data.ym)))]
+          cb()
+        });
+      },
+      ignore_members: (cb) => {
+        fs.readFile('./ignore.json', (err, content) => {
+          if (err) return cb(err)
+          data.ignore = JSON.parse(content);
+          data.ignore_names = data.ignore.map(brother => brother.name)
+          data.ignore_families = data.ignore.map(family => family.uuid)
+
+          // remove ignored ministering brothers
+          data.available_brothers = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
+          
+          // remove ignored families
+          // data.available_families = data.available_families.filter(family => {
+          //   family.members.reduce((res, member) => {
+          //     res = (!data.ignore_families.includes(member.uuid) && res)
+          //     return res
+          //   }, true)
+          // })
           cb()
         });
       },
