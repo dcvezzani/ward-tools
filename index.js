@@ -27,14 +27,23 @@ const process = () => {
       },
       reduceDirectory: (cb) => {
         data.directory = data.directory.reduce((coll, entry) => {
-          // console.log(">>>entry", entry)
+          // if (entry.name.match(/Vezzani/)) console.log(">>>entry", entry)
+          const {name, phone, email, address, district} = entry
+          const members = entry.members.map(member => {
+            const {name, sex, birthDate} = member
+            return {name, sex, birthDate}
+          })
+          coll[entry.name] = { name, phone, email, address, district, members }
+
           entry.members.forEach(fmember => {
-            const {phone, email, address, district} = entry
+          // console.log(">>>fmember", fmember)
             coll[fmember.name] = { phone, email, address, ...fmember, district }
           })
           return coll
         }, {})
         // console.log(">>>data.directory", data.directory);
+        // console.log(">>>me", data.directory["Vezzani, David Curtis"])
+        
         cb()
       },
       eq: (cb) => {
@@ -92,6 +101,60 @@ const process = () => {
           //   }, true)
           // })
           cb()
+        });
+      },
+      current_assignments: (cb) => {
+        fs.readFile('./ministering-eq.json', (err, content) => {
+          if (err) return cb(err)
+          data.current_assignments = JSON.parse(content)
+          data.current_assignments = data.current_assignments.props.initialState.ministeringData.elders
+          // console.log(">>>data.current_assignments", data.current_assignments)
+          // console.log(">>>data.current_assignments", data.current_assignments.map(entry => entry.companionships.map(comp => data.directory[comp.ministers[0].name])))
+          // console.log(">>>data.current_assignments", data.current_assignments.map(entry => entry.companionships.map(comp => comp.assignments[0])))
+          // console.log(">>>matthew", data.directory["Vezzani, Matthew"])
+          // console.log(">>>me", data.directory["Vezzani, David Curtis"])
+          // console.log(">>>data.current_assignments", data.current_assignments.map(entry => entry.companionships[0]))
+
+          // district name and supervisor; need preferred name, phone, email
+          // console.log(">>>data.current_assignments", data.current_assignments[0])
+
+          // ministers and assignments; need preferred name, phone, address, email
+          // assignments; need last name, gender, birth date without year
+
+
+          const chk = data.current_assignments.map(district => {
+            const { districtName, supervisorName } = district;
+            const {phone, email, address, name} = data.directory[supervisorName]
+
+            const companionships = district.companionships.map(companionship => {
+              const ministers = companionship.ministers.map(minister => {
+                const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
+                return {phone, email, address, name}
+              })
+              const assignments = companionship.assignments.map(assignment => {
+                const {phone, email, address, name, members} = {phone: '', email: '', address: '',  ...data.directory[assignment.name]}
+// if (assignment.name.match(/Vezzani/)) console.log(">>>assignment, vezzani", members)
+// if (assignment.name.match(/Vezzani/)) console.log(">>>assignment, vezzani", data.directory[assignment.name])
+// if (assignment.name.match(/Vezzani/)) console.log(">>>assignment, vezzani", {phone, email, address, name, members})
+// if (assignment.name.match(/Geddes/)) console.log(">>>assignment, vezzani", {phone, email, address, name, members})
+                return {phone, email, address, name, members}
+              })
+              return {ministers, assignments};
+            })
+
+            return { districtName, supervisor: {phone, email, address, name}, companionships }
+
+          })
+          // console.log(">>>me", data.directory["Vezzani, David Curtis"])
+          // console.log(">>>chk", chk)
+ 
+        fs.writeFile('ministering-assignments-print-out.json', JSON.stringify(chk), (err) => {
+          if (err) throw err;
+          console.log('The file has been saved!');
+          cb()
+        });
+          
+          // cb()
         });
       },
       assigned_brothers: (cb) => {

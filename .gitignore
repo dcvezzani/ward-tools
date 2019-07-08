@@ -6,3 +6,4 @@ r*.json
 y*.json
 *.csv
 cookie.txt
+node_modules/
