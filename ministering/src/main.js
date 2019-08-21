@@ -5,6 +5,8 @@ import store from './store'
 
 Vue.config.productionTip = false
 
+window.Event = new Vue()
+
 Vue.mixin({
 	beforeCreate(){
   	const sync = this.$options.sync
