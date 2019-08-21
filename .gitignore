@@ -3,7 +3,10 @@ d*.json
 e*.json
 m*.json
 r*.json
+s*.json
 y*.json
 *.csv
 cookie.txt
 node_modules/
+*.zip
+photos/

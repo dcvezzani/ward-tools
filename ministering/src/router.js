@@ -2,6 +2,9 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Ministering from './views/Ministering.vue'
+import Sisters from './views/Sisters.vue'
+import Reports from './views/Reports.vue'
+import Yearbook from '@/components/Yearbook.vue'
 
 Vue.use(Router)
 
@@ -13,6 +16,21 @@ export default new Router({
       path: '/',
       name: 'Ministering',
       component: Ministering
+    },
+    {
+      path: '/sisters',
+      name: 'Sisters',
+      component: Sisters
+    },
+    {
+      path: '/reports',
+      name: 'Reports',
+      component: Reports
+    },
+    {
+      path: '/yearbook',
+      name: 'Yearbook',
+      component: Yearbook
     },
     {
       path: '/about',

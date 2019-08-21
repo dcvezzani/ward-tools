@@ -51,6 +51,7 @@ const process = () => {
         fs.readFile('./eq-cleaned.json', (err, content) => {
           if (err) return cb(err)
           data.eq = JSON.parse(content).map(entry => {
+            // console.log(">>>entry", entry.name)
             const directoryEntry = data.directory[entry.name]
             // console.log(">>>directoryEntry", directoryEntry)
             const {uuid, givenName, surname, phone, email, address, district} = directoryEntry;
@@ -107,7 +108,7 @@ const process = () => {
         fs.readFile('./ministering-eq.json', (err, content) => {
           if (err) return cb(err)
           data.current_assignments = JSON.parse(content)
-          data.current_assignments = data.current_assignments.props.initialState.ministeringData.elders
+          data.current_assignments = data.current_assignments.props.pageProps.initialState.ministeringData.elders
           // console.log(">>>data.current_assignments", data.current_assignments)
           // console.log(">>>data.current_assignments", data.current_assignments.map(entry => entry.companionships.map(comp => data.directory[comp.ministers[0].name])))
           // console.log(">>>data.current_assignments", data.current_assignments.map(entry => entry.companionships.map(comp => comp.assignments[0])))
