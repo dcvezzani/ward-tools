@@ -15,32 +15,50 @@ window.candidatePhoto = null
 window.targetPhoto = null
 
 const onmouseoverHandler = (evt) => {
-  if (window.targetPhoto) return
   evt = evt || window.event;
-  // console.log(">>>evt.keyCode", evt.keyCode, evt.target)
-  // console.log(">>>onmouseoverHandler", evt.target.getAttribute("data-id"))
-  const dataId = evt.target.getAttribute("data-id")
-  if (dataId) {
-    Event.$emit(dataId, {action: 'highlightPhoto', type: 'mouse-over', data: {highlighted: true}})
-    window.candidatePhoto = evt.target
-  }
+  highlightPhoto(evt, {highlighted: true, type: 'mouse-over'})
 }
 
 const onmouseoutHandler = (evt) => {
-  if (window.targetPhoto) return
   evt = evt || window.event;
-  // console.log(">>>onmouseoutHandler", evt.target.getAttribute("data-id"))
-  const dataId = evt.target.getAttribute("data-id")
-  if (dataId) {
-    Event.$emit(dataId, {action: 'highlightPhoto', type: 'mouse-out', data: {highlighted: false}})
-  }
+  highlightPhoto(evt, {highlighted: false, type: 'mouse-out'})
 }
 
 const onmousedownHandler = (evt) => {
   evt = evt || window.event;
-  if (window.targetPhoto) Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'selectPhoto', type: 'mouse-out', data: {selected: false}})
-  window.candidatePhoto = evt.target
-  Event.$emit(evt.target.getAttribute("data-id"), {action: 'selectPhoto', type: 'mouse-out', data: {selected: true}})
+  selectPhoto(evt, {selected: true, type: 'mouse-down'})
+}
+
+const highlightPhoto = (evt, {highlighted, actionType}) => {
+  const dataId = evt.target.getAttribute("data-id")
+  if (dataId) {
+    if (highlighted) {
+      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted: true}})
+      window.candidatePhoto = evt.target
+    }
+    else {
+      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted}})
+      if (!highlighted) window.candidatePhoto = null
+    }
+  }
+}
+
+const selectPhoto = (evt, {selected, actionType}) => {
+  const oldDataId = window.targetPhoto && window.targetPhoto.getAttribute("data-id")
+  const newDataId = window.candidatePhoto && window.candidatePhoto.getAttribute("data-id")
+
+  if (oldDataId) {
+    Event.$emit(oldDataId, {action: 'selectPhoto', type: actionType, data: {selected: !selected}}) 
+  }
+  if (newDataId) {
+    Event.$emit(newDataId, {action: 'selectPhoto', type: actionType, data: {selected}}) 
+  }
+  window.targetPhoto = window.candidatePhoto
+}
+
+const resetPhoto = (evt) => {
+  const dataId = window.targetPhoto.getAttribute("data-id")
+  Event.$emit(dataId, {action: 'resetPhoto'}) 
 }
 
 const zoomOut = (evt, {offset}) => {
@@ -110,19 +128,9 @@ Vue.component('YearbookEntry', {
     highlightPhoto: function ({highlighted}) {
       this.highlighted = highlighted
     },
-    selectPhoto: function ({selected, toggle}) {
-      if (toggle) {
-        selected = !this.selected
-      }
-
-      if (!selected) {
-        this.selected = false
-        return window.targetPhoto = null
-      }
-
-      if (!window.candidatePhoto) return setTimeout(() => { selectPhoto(selected) }, 150)
-      window.targetPhoto = window.candidatePhoto
-      this.selected = true
+    selectPhoto: function ({selected}) {
+      this.highlighted = false
+      this.selected = selected
     },
     resetPhoto: function () {
       this.entry.backgroundPositionX = 'center'
@@ -161,12 +169,6 @@ export default {
   mounted() {
     this.yearbook = yearbook.map(entry => ({...entry, backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}))
 
-    // selectPhotos();
-
-// background-size: 1100px;
-// background-position-x: -570px;
-// background-position-y: -180px;    
-
     document.onkeydown = function(evt) {
         evt = evt || window.event;
         const offset = (evt.shiftKey && evt.ctrlKey) ? 500 : (evt.ctrlKey) ? 50 : (evt.shiftKey) ? 100 : 15
@@ -174,28 +176,22 @@ export default {
         // if (evt.ctrlKey && evt.keyCode == 90) {
         //     alert("Ctrl-Z");
         // }
-        // else if (evt.keyCode == 84) { // t > set target photo
-        //   selectPhoto(!window.targetPhoto)
-        // }
         if (false) {}
-        else if (evt.keyCode == 84) { 
-          const dataId = window.candidatePhoto.getAttribute("data-id")
-          Event.$emit(dataId, {action: 'selectPhoto', type: 'key-code-t', data: {toggle: true}}) 
-        }
-        else if (evt.keyCode == 82) { 
-          const dataId = window.targetPhoto.getAttribute("data-id")
-          Event.$emit(dataId, {action: 'resetPhoto'}) 
-        }
-        else if (evt.keyCode == 188) { zoomOut(evt, {offset}) }
-        else if (evt.keyCode == 190) { zoomIn(evt, {offset}) }
-        else if (evt.keyCode == 87)  { scrollUp(evt, {offset}) }
-        else if (evt.keyCode == 83)  { scrollDown(evt, {offset}) }
-        else if (evt.keyCode == 65)  { scrollLeft(evt, {offset}) }
-        else if (evt.keyCode == 68)  { scrollRight(evt, {offset}) }
+        else if (evt.keyCode == 84) { selectPhoto(evt,  {actionType: 'key-code-t', selected: true}) }
+        else if (evt.keyCode == 82) { resetPhoto(evt,   {actionType: 'key-code-r'}) }
+        else if (evt.keyCode == 188) { zoomOut(evt,     {actionType: 'key-code-comma', offset}) }
+        else if (evt.keyCode == 190) { zoomIn(evt,      {actionType: 'key-code-period', offset}) }
+        else if (evt.keyCode == 87)  { scrollUp(evt,    {actionType: 'key-code-w', offset}) }
+        else if (evt.keyCode == 83)  { scrollDown(evt,  {actionType: 'key-code-s', offset}) }
+        else if (evt.keyCode == 65)  { scrollLeft(evt,  {actionType: 'key-code-a', offset}) }
+        else if (evt.keyCode == 68)  { scrollRight(evt, {actionType: 'key-code-d', offset}) }
         else {
           console.log(">>>evt.keyCode", evt.keyCode)
         }
     };
+  },
+  beforeDestroy() {
+    document.onkeydown = null
   },
 }
 
