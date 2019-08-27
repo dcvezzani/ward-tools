@@ -5,6 +5,8 @@
       <router-link to="/sisters">Single Sisters</router-link> |
       <router-link to="/reports">Elders in Aux</router-link> |
       <router-link to="/yearbook">Yearbook</router-link> |
+      <router-link to="/ministering-concerns">Ministering Concerns</router-link> |
+      <router-link to="/directory">Directory</router-link> |
       <router-link to="/about">About</router-link>
     </div>
     <router-view/>

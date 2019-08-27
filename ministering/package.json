@@ -13,6 +13,7 @@
     "raw-loader": "^3.0.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
+    "vuejs-auto-complete": "^0.9.0",
     "vuex": "^3.0.1"
   },
   "devDependencies": {

@@ -5,6 +5,8 @@ import Ministering from './views/Ministering.vue'
 import Sisters from './views/Sisters.vue'
 import Reports from './views/Reports.vue'
 import Yearbook from '@/components/Yearbook.vue'
+import Directory from '@/components/Directory.vue'
+import MinisteringConcerns from '@/components/MinisteringConcerns.vue'
 
 Vue.use(Router)
 
@@ -13,9 +15,19 @@ export default new Router({
   base: process.env.BASE_URL,
   routes: [
     {
+      path: '/ministering-concerns',
+      name: 'MinisteringConcerns',
+      component: MinisteringConcerns
+    },
+    {
       path: '/',
       name: 'Ministering',
       component: Ministering
+    },
+    {
+      path: '/directory',
+      name: 'Directory',
+      component: Directory
     },
     {
       path: '/sisters',
