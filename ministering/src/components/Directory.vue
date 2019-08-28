@@ -71,6 +71,8 @@ Vue.component('PersonContactInfo', {
 })
 
 const sortEntries = (field="name") => {
+  if (!field) return (n1, n2) => 0
+
   if (typeof field === 'object') {
     return (n1, n2) => {
       return field.reduce((tres, f) => {
@@ -103,7 +105,7 @@ export default {
   },
   computed: {
     sortOptions: function(){
-      if (this.sortOptionsInput.length === 0) return "name"
+      if (this.sortOptionsInput.length === 0) return null
       let soptions = this.sortOptionsInput.split(/ *, */)
       soptions = soptions.filter(o => this.supportedSortOptions.includes(o))
       return (soptions.length === 1) ? soptions[0] : soptions
@@ -152,7 +154,7 @@ export default {
       const [all, district, street] = (md) ? md : ['', '99', '']
       return {id: index+1, ...entry, district, street}
     })
-    this.availableNameIds = this.names.sort((n1, n2) => n1.name.localeCompare(n2.name)).map(entry => entry.id)
+    this.availableNameIds = this.names.map(entry => entry.id)
 
     const autocompleteInput = document.querySelector(".autocomplete input[placeholder='Search']")
     autocompleteInput.addEventListener("keydown", function(evt){
@@ -166,11 +168,13 @@ export default {
     });
   },
   watch: {
-    // $vm0.selectedNameIds = "468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243".split(",").map(entry => parseInt(entry))
+    // $vm0.selectedNameIds = "468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
     selectedNameIds: function(_new, _old) {
       this.valuesOnly = _new.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries(this.sortOptions)).map(entry => {
-        const keys = Object.keys(entry).filter(key => key != "id")
-        return keys.map(key => entry[key].toString().replace(/[\r\n]/g, ' ')).join("	")
+        const keys = Object.keys(entry).filter(key => !["id", "district", "street"].includes(key))
+        const values = keys.map(key => entry[key].toString().replace(/[\r\n]/g, ' '))
+        values.push(`${entry.district}-${entry.street}`)
+        return values.join("	")
       }).join("\n")
     },
   },
