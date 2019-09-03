@@ -157,16 +157,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style >
-  .family div,
-  .brother div {
+  .ministering-concerns .family div,
+  .ministering-concerns .brother div {
     display: inline-block;
   }
-  .family .name,
-  .brother .name {
+  .ministering-concerns .family .name,
+  .ministering-concerns .brother .name {
     width: 300px;
   }
-  .family .street,
-  .brother .street {
+  .ministering-concerns .family .street,
+  .ministering-concerns .brother .street {
     margin-left: 1em;
     width: 250px;
   }
