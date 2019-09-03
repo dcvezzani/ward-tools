@@ -5,12 +5,14 @@
     >
     </autocomplete>
 
+    <div>{{selectedNameIdx}}</div>
+
     <div class="supportedSortOptions-label">Sort Options:</div>
     <input v-model="sortOptionsInput" type="text" placeholder="name"><span class="supportedSortOptions">({{supportedSortOptions.join(",")}})</span>
     <ul>
       <li v-for="entry in selectedNames" :key="entry.id">
         <PersonContactInfo :entry="entry" inline-template>
-          <div class="person-contact-info">
+          <div :class="classNames">
             <div @click="toggleEdit" class="edit-mode"></div>
 
             <h3 class="name">{{entry.name}}</h3>
@@ -52,6 +54,9 @@ Vue.component('PersonContactInfo', {
     }
   },
   computed: {
+    classNames: function() {
+      return ['person-contact-info', (this.entry && this.entry.selected) ? 'selected' : '',]
+    },
     formattedPhone: function() {
       return `tel:${this.phone}`
     },
@@ -65,9 +70,10 @@ Vue.component('PersonContactInfo', {
     }
   },
   mounted(){
+    const self = this
     this.phone = this.entry.phone
     this.email = this.entry.email
-  }
+  },
 })
 
 const sortEntries = (field="name") => {
@@ -100,7 +106,8 @@ export default {
       autocompleteValue: '',
       valuesOnly: '',
       sortOptionsInput: '',
-      supportedSortOptions: 'name,phone,email,address,district,street'.split(/,/)
+      supportedSortOptions: 'name,phone,email,address,district,street'.split(/,/),
+      selectedNameIdx: -1,
     }
   },
   computed: {
@@ -132,19 +139,14 @@ export default {
         // this.availableNameIds = this.names.sort((n1, n2) => n1.name.localeCompare(n2.name)).filter(entry => !this.selectedNameIds.includes(entry.id)).map(entry => entry.id)
       }
 
-      // this.valuesOnly = this.selectedNames.map(entry => {
-      //   const keys = Object.keys(entry)
-      //   return keys.map(key => entry[key]).join("	")
-      // }).join("\n")
-      // 
-      // $vm0.valuesOnly = $vm0.selectedNames.map(entry => {                               //
-      //   const keys = Object.keys(entry)
-      //   return keys.map(key => entry[key].toString().replace(/[\r\n]/g, ' ')).join("	")
-      // }).join("\n")
-
-
       document.querySelector(".autocomplete .autocomplete--clear").click();
       document.querySelector(".autocomplete input[placeholder='Search']").focus();
+    },
+    navDown: function() {
+      this.selectedNameIdx += (this.selectedNameIdx < this.selectedNameIds.length - 1) ? 1 : 0
+    },
+    navUp: function() {
+      this.selectedNameIdx -= (this.selectedNameIdx > 0) ? 1 : 0
     },
   },
   mounted() {
@@ -152,12 +154,12 @@ export default {
     this.names = directoryNames.map((entry, index) => {
       const md = entry.district.match(/(\d+)-(.*)/)
       const [all, district, street] = (md) ? md : ['', '99', '']
-      return {id: index+1, ...entry, district, street}
+      return {id: index+1, ...entry, district, street, selected: false}
     })
     this.availableNameIds = this.names.map(entry => entry.id)
 
     const autocompleteInput = document.querySelector(".autocomplete input[placeholder='Search']")
-    autocompleteInput.addEventListener("keydown", function(evt){
+    autocompleteInput.addEventListener("keydown", (evt) => {
       if (evt.keyCode === 13) {
         if (document.querySelectorAll(".autocomplete .autocomplete__results__item").length > 0) {
           const name = document.querySelectorAll(".autocomplete .autocomplete__results__item")[0].innerText
@@ -166,16 +168,32 @@ export default {
         }
       }
     });
+
+    document.onkeydown = function(evt) {
+      switch(evt.keyCode) {
+        case 74: { self.navDown(); break; }
+        case 75: { self.navUp(); break; }
+        default: 
+          console.log(">>>evt.keyCode", evt.keyCode)
+      }
+    };
+    
   },
   watch: {
-    // $vm0.selectedNameIds = "468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
+    // $vm0.selectedNameIds = "1,468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
     selectedNameIds: function(_new, _old) {
       this.valuesOnly = _new.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries(this.sortOptions)).map(entry => {
         const keys = Object.keys(entry).filter(key => !["id", "district", "street"].includes(key))
-        const values = keys.map(key => entry[key].toString().replace(/[\r\n]/g, ' '))
+        const values = keys.map(key => (entry[key]) ? entry[key].toString().replace(/[\r\n]/g, ' ') : entry[key])
         values.push(`${entry.district}-${entry.street}`)
         return values.join("	")
       }).join("\n")
+    },
+    selectedNameIdx: function(_new, _old) {
+      const prevEntry = this.names.filter(_entry => this.selectedNameIds[_old] === _entry.id)[0]
+      const currEntry = this.names.filter(_entry => this.selectedNameIds[_new] === _entry.id)[0]
+      if (prevEntry) prevEntry.selected = false
+      currEntry.selected = true
     },
   },
 }
@@ -226,5 +244,8 @@ export default {
   }
   .supportedSortOptions-label {
     margin-top: 1em;
+  }
+  .person-contact-info.selected {
+    background-color: yellow;
   }
 </style>
