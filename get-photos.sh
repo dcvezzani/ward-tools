@@ -74,6 +74,10 @@ fetch_photo () {
   local filename="photos/$3.png"
   local apply_thumbnails="$4"
 
+  #if [ -e "$filename" ]; then
+  #  return 1
+  #fi
+
   if [ "$apply_thumbnails" == "" ]; then
       apply_thumbnails=true
   fi
@@ -113,11 +117,12 @@ download_missing_photos () {
   local apply_thumbnails="$4"
   local filename="photos/$3.png"
 
-  photo_exists "$filename" ignore,placeholders,emptyfile,filenotexist
+  # photo_exists "$filename" ignore,placeholders,emptyfile,filenotexist
+  photo_exists "$filename" ignore,placeholders,emptyfile
   retVal="$?"
   echo "retVal: $retVal"
   if [ "$retVal" != "0" ]; then
-    echo "missing photo for $filename; attempting to download again"
+    echo "missing photo for $filename ($uuid); attempting to download again"
     fetch_photo "$scope" "$uuid" "$name" "$apply_thumbnails"
   fi
   return 0
@@ -160,4 +165,6 @@ retry_families () {
 # fetch_photo members 00aa57bf-adc6-448c-a594-df5f25085231 rees-dallan-family false
 # fetch_photo members d15eee46-d054-4247-abe4-e7d1dcf4ccf9 janson-tyler-family false
 
-# apply_placeholder
+# retry_elders
+# retry_families
+apply_placeholder
