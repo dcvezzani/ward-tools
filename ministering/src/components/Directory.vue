@@ -5,7 +5,7 @@
     >
     </autocomplete>
 
-    <div>{{selectedNameIdx}}</div>
+    <div>{{hoverNameIdx}}</div>
 
     <div class="supportedSortOptions-label">Sort Options:</div>
     <input v-model="sortOptionsInput" type="text" placeholder="name"><span class="supportedSortOptions">({{supportedSortOptions.join(",")}})</span>
@@ -15,7 +15,7 @@
           <div :class="classNames">
             <div @click="toggleEdit" class="edit-mode"></div>
 
-            <h3 class="name">{{entry.name}}</h3>
+            <h3 class="name" :class="nameClassNames">{{entry.id}}, {{entry.name}}</h3>
             <div class="phone"><span class="label">Phone: </span><span class="value"><a :href="formattedPhone">{{phone}}</a></span></div>
             <div class="email"><span class="label">Email: </span><span class="value"><a :href="formattedEmail">{{email}}</a></span></div>
             <div class="address"><span class="label">Address: </span>(<span class="district">{{entry.district}}-{{entry.street}}</span>) </span><span class="value" v-html="entry.address"></span></div>
@@ -55,7 +55,12 @@ Vue.component('PersonContactInfo', {
   },
   computed: {
     classNames: function() {
-      return ['person-contact-info', (this.entry && this.entry.selected) ? 'selected' : '',]
+      const hovered = (this.entry && this.entry.hovered) ? 'hovered' : ''
+      return ['person-contact-info', hovered]
+    },
+    nameClassNames: function() {
+      const selected = (this.entry && this.entry.selected) ? 'selected' : ''
+      return [selected]
     },
     formattedPhone: function() {
       return `tel:${this.phone}`
@@ -73,6 +78,8 @@ Vue.component('PersonContactInfo', {
     const self = this
     this.phone = this.entry.phone
     this.email = this.entry.email
+
+    // this.$set(this.entry, 'b', 2)
   },
 })
 
@@ -107,7 +114,11 @@ export default {
       valuesOnly: '',
       sortOptionsInput: '',
       supportedSortOptions: 'name,phone,email,address,district,street'.split(/,/),
-      selectedNameIdx: -1,
+      hoverNameIdx: -1,
+      states: [],
+      stateIdx: -1,
+      restoring: false,
+      lastRestoreAction: null,
     }
   },
   computed: {
@@ -143,10 +154,79 @@ export default {
       document.querySelector(".autocomplete input[placeholder='Search']").focus();
     },
     navDown: function() {
-      this.selectedNameIdx += (this.selectedNameIdx < this.selectedNameIds.length - 1) ? 1 : 0
+      this.hoverNameIdx += (this.hoverNameIdx < this.selectedNameIds.length - 1) ? 1 : 0
     },
     navUp: function() {
-      this.selectedNameIdx -= (this.selectedNameIdx > 0) ? 1 : 0
+      this.hoverNameIdx -= (this.hoverNameIdx > 0) ? 1 : 0
+    },
+    select: function() {
+      const entryId = this.selectedNameIds[this.hoverNameIdx]
+      const entryIdx = this.names.findIndex(entry => entry.id == entryId)
+      this.names[entryIdx].selected = !this.names[entryIdx].selected
+    },
+    restoreState: function() {
+      const state = JSON.parse(this.states[this.stateIdx])
+      Object.keys(state).forEach(key => {
+        this[key] = state[key]
+      })
+      this.restoring = false
+    },
+    nextState: function() {
+      console.log(">>>this.stateIdx [1]", this.stateIdx)
+      if (this.stateIdx >= this.states.length-1) return
+
+      this.restoring = true
+      this.hoverNameIdx = -1
+      this.stateIdx += 1
+      console.log(">>>this.stateIdx [2]", this.stateIdx)
+      this.$nextTick(() => this.restoreState())
+      this.lastRestoreAction = 'nextState'
+    },
+    prevState: function() {
+      if (this.stateIdx < 1) return
+
+      if (this.lastRestoreAction === null) {
+        this.saveState()
+        this.stateIdx -= 1
+      }
+
+      this.restoring = true
+      this.hoverNameIdx = -1
+      this.stateIdx -= 1
+      this.$nextTick(() => this.restoreState())
+      this.lastRestoreAction = 'prevState'
+    },
+    saveState: function(options) {
+      const {truncate} = {truncate: false, ...options}
+      if (truncate) {
+        this.states = this.states.slice(0,this.stateIdx)
+      }
+
+      const snapshot = Object.keys(this.$data).filter(key => !['stateIdx', 'states', 'restoring', 'lastRestoreAction'].includes(key)).reduce((map, key) => {
+        map[key] = this[key]
+        return map
+      }, {})
+
+      this.states.push(JSON.stringify(snapshot))
+      this.stateIdx = this.states.length
+    },
+    removeSelected: function() {
+      if (this.selectedNameIds.length < 1 || this.hoverNameIdx < 0) return
+
+      let stagedIds = this.selectedNames.filter(entry => {
+        return entry.selected
+      }).map(entry => entry.id)
+
+      if (stagedIds.length === 0) stagedIds = [this.selectedNameIds[this.hoverNameIdx]]
+
+      const entryId = stagedIds[0]
+      const entryIdx = this.selectedNameIds.findIndex(id => id == entryId)
+
+      this.selectedNameIds = this.selectedNameIds.filter(id => !stagedIds.includes(id))
+      console.log(">>>entryIdx", entryIdx, this.selectedNameIds[entryIdx])
+
+      this.hoverNameIdx = -1
+      this.$nextTick(() => { this.hoverNameIdx = entryIdx })
     },
   },
   mounted() {
@@ -154,7 +234,7 @@ export default {
     this.names = directoryNames.map((entry, index) => {
       const md = entry.district.match(/(\d+)-(.*)/)
       const [all, district, street] = (md) ? md : ['', '99', '']
-      return {id: index+1, ...entry, district, street, selected: false}
+      return {id: index+1, ...entry, district, street, hovered: false, selected: false}
     })
     this.availableNameIds = this.names.map(entry => entry.id)
 
@@ -170,14 +250,20 @@ export default {
     });
 
     document.onkeydown = function(evt) {
+      if (![85, 82].includes(evt.keyCode)) self.lastRestoreAction = null
+      
       switch(evt.keyCode) {
         case 74: { self.navDown(); break; }
         case 75: { self.navUp(); break; }
+        case 88: { self.select(); break; }
+        case 68: { self.saveState({truncate: true}); self.removeSelected(); break; }
+        case 85: { self.prevState(); break; }
+        case 82: { if (evt.ctrlKey) self.nextState(); break; }
         default: 
           console.log(">>>evt.keyCode", evt.keyCode)
+          // ctrlKey
       }
     };
-    
   },
   watch: {
     // $vm0.selectedNameIds = "1,468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
@@ -189,11 +275,15 @@ export default {
         return values.join("	")
       }).join("\n")
     },
-    selectedNameIdx: function(_new, _old) {
-      const prevEntry = this.names.filter(_entry => this.selectedNameIds[_old] === _entry.id)[0]
-      const currEntry = this.names.filter(_entry => this.selectedNameIds[_new] === _entry.id)[0]
-      if (prevEntry) prevEntry.selected = false
-      currEntry.selected = true
+    hoverNameIdx: function(_new, _old) {
+      if (this.restoring) return
+
+      console.log(">>>currEntry [1]", _new, _old)
+      const prevEntry = this.names.find(_entry => this.selectedNameIds[_old] === _entry.id)
+      const currEntry = this.names.find(_entry => this.selectedNameIds[_new] === _entry.id)
+      console.log(">>>currEntry [2]", _new, currEntry)
+      if (prevEntry) prevEntry.hovered = false
+      if (currEntry) currEntry.hovered = true
     },
   },
 }
@@ -245,7 +335,10 @@ export default {
   .supportedSortOptions-label {
     margin-top: 1em;
   }
-  .person-contact-info.selected {
+  .person-contact-info .selected {
+    background-color: yellowgreen;
+  }
+  .person-contact-info.hovered {
     background-color: yellow;
   }
 </style>
