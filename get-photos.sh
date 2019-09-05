@@ -165,6 +165,6 @@ retry_families () {
 # fetch_photo members 00aa57bf-adc6-448c-a594-df5f25085231 rees-dallan-family false
 # fetch_photo members d15eee46-d054-4247-abe4-e7d1dcf4ccf9 janson-tyler-family false
 
-# retry_elders
-# retry_families
+retry_elders
+retry_families
 apply_placeholder
