@@ -111,7 +111,6 @@ export default {
       availableNameIds: [],
       selectedNameIds: [],
       autocompleteValue: '',
-      valuesOnly: '',
       sortOptionsInput: '',
       supportedSortOptions: 'name,phone,email,address,district,street'.split(/,/),
       hoverNameIdx: -1,
@@ -133,6 +132,14 @@ export default {
     },
     selectedNames: function(){
       return this.selectedNameIds.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries(this.sortOptions))
+    },
+    valuesOnly: function(){
+      return this.selectedNameIds.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries(this.sortOptions)).map(entry => {
+        const keys = Object.keys(entry).filter(key => !["id", "district", "street"].includes(key))
+        const values = keys.map(key => (entry[key]) ? entry[key].toString().replace(/[\r\n]/g, ' ') : entry[key])
+        values.push(`${entry.district}-${entry.street}`)
+        return values.join("	")
+      }).join("\n")
     },
   },
   methods: {
@@ -260,28 +267,24 @@ export default {
         case 85: { self.prevState(); break; }
         case 82: { if (evt.ctrlKey) self.nextState(); break; }
         default: 
-          console.log(">>>evt.keyCode", evt.keyCode)
+          // console.log(">>>evt.keyCode", evt.keyCode)
           // ctrlKey
       }
     };
   },
   watch: {
     // $vm0.selectedNameIds = "1,468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
-    selectedNameIds: function(_new, _old) {
-      this.valuesOnly = _new.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries(this.sortOptions)).map(entry => {
-        const keys = Object.keys(entry).filter(key => !["id", "district", "street"].includes(key))
-        const values = keys.map(key => (entry[key]) ? entry[key].toString().replace(/[\r\n]/g, ' ') : entry[key])
-        values.push(`${entry.district}-${entry.street}`)
-        return values.join("	")
-      }).join("\n")
+    sortOptionsInput: function(_new, _old) {
+      if (_new != _old) this.hoverNameIdx = -1
     },
     hoverNameIdx: function(_new, _old) {
       if (this.restoring) return
 
-      console.log(">>>currEntry [1]", _new, _old)
-      const prevEntry = this.names.find(_entry => this.selectedNameIds[_old] === _entry.id)
-      const currEntry = this.names.find(_entry => this.selectedNameIds[_new] === _entry.id)
-      console.log(">>>currEntry [2]", _new, currEntry)
+      // console.log(">>>currEntry [1]", _new, _old)
+      const prevEntry = this.names.find(_entry => (this.selectedNames[_old] && this.selectedNames[_old].id) === _entry.id)
+      const currEntry = this.names.find(_entry => (this.selectedNames[_new] && this.selectedNames[_new].id) === _entry.id)
+
+      // console.log(">>>currEntry [2]", _new, currEntry)
       if (prevEntry) prevEntry.hovered = false
       if (currEntry) currEntry.hovered = true
     },
