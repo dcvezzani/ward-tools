@@ -1,0 +1,26 @@
+{
+  "name": "be",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "DEBUG=be:* ./node_modules/.bin/nodemon bin/www --exec ./node_modules/.bin/babel-node --presets @babel/preset-env",
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.3",
+    "cors": "^2.8.5",
+    "debug": "~2.6.9",
+    "express": "~4.16.0",
+    "http-errors": "~1.6.2",
+    "morgan": "~1.9.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.5.0",
+    "@babel/core": "^7.5.4",
+    "@babel/node": "^7.5.0",
+    "@babel/preset-env": "^7.5.4",
+    "@babel/register": "^7.4.4",
+    "babel-plugin-root-import": "^6.2.0",
+    "nodemon": "^1.19.1"
+  }
+}

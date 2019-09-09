@@ -1,6 +1,7 @@
 <template>
   <div class="yearbook">
-    <YearbookEntry v-for="entry in yearbook" :key="entry.uuid" :entry="entry" class="yearbook-entry" inline-template>
+    <div><button @click="savePhotoAttributes">save</button></div>
+    <YearbookEntry v-for="entry in yearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]" class="yearbook-entry" inline-template>
       <div :data-id="entry.uuid" @mouseover="onmouseoverHandler" @mousedown="onmousedownHandler" @mouseout="onmouseoutHandler" @click="toggleMode" :class="classNames" :style="modeStyle"><span class="label"><span class="text truncate">{{ entry.name }}</span></span></div>
     </YearbookEntry>
   </div>
@@ -102,17 +103,16 @@ const getSize = (targetElement, defaultValue) => {
 }
 
 Vue.component('YearbookEntry', {
-  props:['entry'],
+  props:['entry', 'photoModifications'],
   data() {
     return {
-      mode: "elder",
       highlighted: false,
       selected: false,
     }
   },
   computed: {
     modeStyle: function() {
-      return "background: url('" + this.entry[this.mode + "Photo"] + "') " + this.entry.backgroundPositionX + " " + this.entry.backgroundPositionY + " / " + this.entry.backgroundSize + " no-repeat rgb(255, 255, 255); display: inline-block; height: 200px; width: 200px;"
+      return "background: url('" + this.entry[this.photoModifications.active] + "') " + this.photoModifications.backgroundPositionX + " " + this.photoModifications.backgroundPositionY + " / " + this.photoModifications.backgroundSize + " no-repeat rgb(255, 255, 255); display: inline-block; height: 200px; width: 200px;"
     },
     classNames: function() {
       return ['photo', (this.selected || this.highlighted) ? 'selected' : '']
@@ -123,7 +123,7 @@ Vue.component('YearbookEntry', {
     onmouseoutHandler,
     onmousedownHandler,
     toggleMode: function () {
-      this.mode = (this.mode != 'elder') ? 'elder' : 'family'
+      this.photoModifications.active = (this.photoModifications.active != 'elderPhoto') ? 'elderPhoto' : 'familyPhoto'
     },
     highlightPhoto: function ({highlighted}) {
       this.highlighted = highlighted
@@ -133,10 +133,10 @@ Vue.component('YearbookEntry', {
       this.selected = selected
     },
     resetPhoto: function () {
-      this.entry.backgroundPositionX = 'center'
-      this.entry.backgroundPositionY = 'center'
-      this.entry.backgroundSize = 'cover'
-      this.mode = 'elder'
+      this.photoModifications.backgroundPositionX = 'center'
+      this.photoModifications.backgroundPositionY = 'center'
+      this.photoModifications.backgroundSize = 'cover'
+      this.photoModifications.active = 'elderPhoto'
     },
   },
   mounted() {
@@ -146,8 +146,8 @@ Vue.component('YearbookEntry', {
       switch(payload.action) {
         case 'photo-manipulation':
           const {attribute, offset, defaultVal, label} = payload.data
-          const currentValue = getSize(self.entry[attribute], defaultVal)
-          return self.entry[attribute] = (currentValue - offset) + "px"
+          const currentValue = getSize(self.photoModifications[attribute], defaultVal)
+          return self.photoModifications[attribute] = (currentValue - offset) + "px"
 
         default:
           return self[payload.action](payload.data)
@@ -164,10 +164,37 @@ export default {
   data() {
     return {
       yearbook: [],
+      photoModifications: {},
     }
   },
+  methods: {
+    savePhotoAttributes: function() {
+      fetch('http://localhost:3000/yearbook-photo-attributes', {
+        method: "POST",
+        headers: {'content-type': 'application/json; charset=UTF-8'},
+        body: JSON.stringify({data: 'xxx'}),
+      })
+      .then(data => data.json())
+      .then(res => console.log(res))
+      .catch(err => console.error(err))
+      
+    },
+  },
   mounted() {
-    this.yearbook = yearbook.map(entry => ({...entry, backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}))
+    this.yearbook = yearbook
+    
+    fetch('http://localhost:3000/yearbook-photo-attributes', {
+      method: "GET",
+      headers: {'content-type': 'application/json; charset=UTF-8'}
+    })
+    .then(data => data.json())
+    .then(res => console.log(res))
+    .catch(err => console.error(err))
+    
+    this.photoModifications = yearbook.reduce((entries, entry) => {
+      entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
+      return entries
+    }, {})
 
     document.onkeydown = function(evt) {
         evt = evt || window.event;
