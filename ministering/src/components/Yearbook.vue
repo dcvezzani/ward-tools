@@ -1,7 +1,7 @@
 <template>
   <div class="yearbook">
-    <div><button @click="savePhotoAttributes">save</button></div>
-    <YearbookEntry v-for="entry in yearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]" class="yearbook-entry" inline-template>
+    <div><button @click="savePhotoAttributes">save</button> | <button @click="loadPhotoAttributes">load</button></div>
+    <YearbookEntry v-if="photoModificationsLoaded" v-for="entry in yearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]" class="yearbook-entry" inline-template>
       <div :data-id="entry.uuid" @mouseover="onmouseoverHandler" @mousedown="onmousedownHandler" @mouseout="onmouseoutHandler" @click="toggleMode" :class="classNames" :style="modeStyle"><span class="label"><span class="text truncate">{{ entry.name }}</span></span></div>
     </YearbookEntry>
   </div>
@@ -167,34 +167,38 @@ export default {
       photoModifications: {},
     }
   },
+  computed: {
+    photoModificationsLoaded: function() {
+      return (this.photoModifications && Object.keys(this.photoModifications).length > 0)
+    }
+  },
   methods: {
     savePhotoAttributes: function() {
       fetch('http://localhost:3000/yearbook-photo-attributes', {
         method: "POST",
         headers: {'content-type': 'application/json; charset=UTF-8'},
-        body: JSON.stringify({data: 'xxx'}),
+        body: JSON.stringify({data: this.photoModifications}),
       })
       .then(data => data.json())
       .then(res => console.log(res))
       .catch(err => console.error(err))
       
     },
+    loadPhotoAttributes: function() {
+      return fetch('http://localhost:3000/yearbook-photo-attributes', {
+        method: "GET",
+        headers: {'content-type': 'application/json; charset=UTF-8'},
+      })
+      .then(data => data.json())
+      .then(res => res.data)
+      .catch(err => {
+        console.error(err)
+      })
+    },
   },
-  mounted() {
+  async mounted() {
     this.yearbook = yearbook
-    
-    fetch('http://localhost:3000/yearbook-photo-attributes', {
-      method: "GET",
-      headers: {'content-type': 'application/json; charset=UTF-8'}
-    })
-    .then(data => data.json())
-    .then(res => console.log(res))
-    .catch(err => console.error(err))
-    
-    this.photoModifications = yearbook.reduce((entries, entry) => {
-      entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
-      return entries
-    }, {})
+    this.photoModifications = await this.loadPhotoAttributes()
 
     document.onkeydown = function(evt) {
         evt = evt || window.event;
