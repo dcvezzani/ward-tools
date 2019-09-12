@@ -200,6 +200,13 @@ export default {
     this.yearbook = yearbook
     this.photoModifications = await this.loadPhotoAttributes()
 
+    if (!this.photoModifications) {
+      this.photoModifications = yearbook.reduce((entries, entry) => {
+        entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
+        return entries
+      }, {})
+    }
+
     document.onkeydown = function(evt) {
         evt = evt || window.event;
         const offset = (evt.shiftKey && evt.ctrlKey) ? 500 : (evt.ctrlKey) ? 50 : (evt.shiftKey) ? 100 : 15
