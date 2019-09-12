@@ -65,10 +65,8 @@
 <script>
 import elders from '../../../eq-members-with-aux-positions.json'
 import Person from '@/components/Person.vue'
+import { sort_by_name, sort_by } from '@/assets/js/utils'
 const uuidv4 = require('uuid/v4');
-
-const sort_by_name = (a,b) => a.name.localeCompare(b.name);
-const sort_by = (field) => (a,b) => a[field].localeCompare(b[field]);
 
 export default {
   name: 'EldersWithCallings',
