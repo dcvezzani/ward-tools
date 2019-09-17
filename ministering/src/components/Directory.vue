@@ -34,6 +34,10 @@
       </li>
     </ul>
 
+    <div>
+      <router-link :to="sendTextMessage">Send Text Message</router-link>
+    </div>
+
     <textarea id="values-only" v-model="valuesOnly" name="" cols="30" rows="10"></textarea>
   
   </div>
@@ -99,6 +103,11 @@ const sortEntries = (field="name") => {
     return (n1, n2) => n1[field].localeCompare(n2[field])
 };
 
+const focusOnFilter = () => {
+  document.querySelector(".autocomplete .autocomplete--clear").click();
+  document.querySelector(".autocomplete input[placeholder='Search']").focus();
+};
+
 export default {
   name: 'Directory',
   components: {autocomplete: Autocomplete},
@@ -141,24 +150,28 @@ export default {
         return values.join("	")
       }).join("\n")
     },
+    sendTextMessage: function(){
+      return { name: 'MassPrivatePersonalText', params: { ids: this.selectedNameIds } }
+    }
   },
   methods: {
-    selectedHandler: function(selectedValue) {
+    selectedHandler: function() {
       let fndIndex = -1
       for (let i=0; i<this.names.length; i++) {
         if (this.names[i].id == this.autocompleteValue) {
           fndIndex = i
+          this.names[i].selected = false
+          this.names[i].hovered = false
           this.selectedNameIds.push(this.names[i].id)
         }
       }
       if (fndIndex > -1) {
         this.selectedNameIds = this.selectedNameIds
-        this.availableNameIds = this.names.filter(entry => !this.selectedNameIds.includes(entry.id)).map(entry => entry.id)
+        // this.availableNameIds = this.names.filter(entry => !this.selectedNameIds.includes(entry.id)).map(entry => entry.id)
         // this.availableNameIds = this.names.sort((n1, n2) => n1.name.localeCompare(n2.name)).filter(entry => !this.selectedNameIds.includes(entry.id)).map(entry => entry.id)
       }
 
-      document.querySelector(".autocomplete .autocomplete--clear").click();
-      document.querySelector(".autocomplete input[placeholder='Search']").focus();
+      focusOnFilter()
     },
     navDown: function() {
       this.hoverNameIdx += (this.hoverNameIdx < this.selectedNameIds.length - 1) ? 1 : 0
@@ -169,6 +182,7 @@ export default {
     select: function() {
       const entryId = this.selectedNameIds[this.hoverNameIdx]
       const entryIdx = this.names.findIndex(entry => entry.id == entryId)
+      // console.log(">>>select", entryIdx, this.names[entryIdx].selected)
       this.names[entryIdx].selected = !this.names[entryIdx].selected
     },
     restoreState: function() {
@@ -179,13 +193,13 @@ export default {
       this.restoring = false
     },
     nextState: function() {
-      console.log(">>>this.stateIdx [1]", this.stateIdx)
+      // console.log(">>>this.stateIdx [1]", this.stateIdx)
       if (this.stateIdx >= this.states.length-1) return
 
       this.restoring = true
       this.hoverNameIdx = -1
       this.stateIdx += 1
-      console.log(">>>this.stateIdx [2]", this.stateIdx)
+      // console.log(">>>this.stateIdx [2]", this.stateIdx)
       this.$nextTick(() => this.restoreState())
       this.lastRestoreAction = 'nextState'
     },
@@ -224,16 +238,17 @@ export default {
         return entry.selected
       }).map(entry => entry.id)
 
-      if (stagedIds.length === 0) stagedIds = [this.selectedNameIds[this.hoverNameIdx]]
+      // if (stagedIds.length === 0) stagedIds = [this.selectedNameIds[this.hoverNameIdx]]
 
-      const entryId = stagedIds[0]
-      const entryIdx = this.selectedNameIds.findIndex(id => id == entryId)
+      // const entryId = stagedIds[0]
+      // const entryIdx = this.selectedNameIds.findIndex(id => id == entryId)
 
       this.selectedNameIds = this.selectedNameIds.filter(id => !stagedIds.includes(id))
-      console.log(">>>entryIdx", entryIdx, this.selectedNameIds[entryIdx])
 
-      this.hoverNameIdx = -1
-      this.$nextTick(() => { this.hoverNameIdx = entryIdx })
+      if (this.hoverNameIdx >= this.selectedNameIds.length) this.hoverNameIdx = this.selectedNameIds.length - 1
+
+      // this.hoverNameIdx = -1
+      // this.$nextTick(() => { this.hoverNameIdx = entryIdx })
     },
   },
   mounted() {
@@ -271,11 +286,18 @@ export default {
           // ctrlKey
       }
     };
+
+    focusOnFilter()
   },
   watch: {
     // $vm0.selectedNameIds = "1,468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
     sortOptionsInput: function(_new, _old) {
       if (_new != _old) this.hoverNameIdx = -1
+    },
+    selectedNameIds: function(_new, _old) {
+      this.availableNameIds = this.names.filter(_entry => !_new.includes(_entry.id)).map(_entry => {
+        return _entry.id
+      })
     },
     hoverNameIdx: function(_new, _old) {
       if (this.restoring) return
@@ -287,6 +309,7 @@ export default {
       // console.log(">>>currEntry [2]", _new, currEntry)
       if (prevEntry) prevEntry.hovered = false
       if (currEntry) currEntry.hovered = true
+      // console.log(">>>_new:hoverNameIdx", _new)
     },
   },
 }

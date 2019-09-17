@@ -7,6 +7,7 @@ import Reports from './views/Reports.vue'
 import Yearbook from '@/components/Yearbook.vue'
 import Directory from '@/components/Directory.vue'
 import MinisteringConcerns from '@/components/MinisteringConcerns.vue'
+import MassPrivatePersonalText from '@/components/MassPrivatePersonalText.vue'
 
 Vue.use(Router)
 
@@ -28,6 +29,11 @@ export default new Router({
       path: '/directory',
       name: 'Directory',
       component: Directory
+    },
+    {
+      path: '/text',
+      name: 'MassPrivatePersonalText',
+      component: MassPrivatePersonalText
     },
     {
       path: '/sisters',
