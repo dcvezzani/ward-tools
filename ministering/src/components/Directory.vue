@@ -8,7 +8,7 @@
     <div>{{hoverNameIdx}}</div>
 
     <div class="supportedSortOptions-label">Sort Options:</div>
-    <input v-model="sortOptionsInput" type="text" placeholder="name"><span class="supportedSortOptions">({{supportedSortOptions.join(",")}})</span>
+    <input v-model="sortOptionsInput" type="text" placeholder="name" @focus="inputting=true" @blur="inputting=false"><span class="supportedSortOptions">({{supportedSortOptions.join(",")}})</span>
     <ul>
       <li v-for="entry in selectedNames" :key="entry.id">
         <PersonContactInfo :entry="entry" inline-template>
@@ -35,7 +35,7 @@
     </ul>
 
     <div>
-      <router-link :to="sendTextMessage">Send Text Message</router-link>
+      <router-link :to="sendTextMessageLink">Send Text Message</router-link>
     </div>
 
     <textarea id="values-only" v-model="valuesOnly" name="" cols="30" rows="10"></textarea>
@@ -126,6 +126,7 @@ export default {
       states: [],
       stateIdx: -1,
       restoring: false,
+      inputting: false,
       lastRestoreAction: null,
     }
   },
@@ -150,11 +151,22 @@ export default {
         return values.join("	")
       }).join("\n")
     },
-    sendTextMessage: function(){
-      return { name: 'MassPrivatePersonalText', params: { ids: this.selectedNameIds } }
+    sendTextMessageLink: function(){
+      let stagedIds = this.selectedNames.filter(entry => {
+        return entry.selected
+      }).map(entry => entry.id)
+      stagedIds = (stagedIds.length > 0) ? stagedIds : this.selectedNameIds
+      
+      return { name: 'MassPrivatePersonalText', params: { ids: stagedIds } }
     }
   },
   methods: {
+    sendTextMessage: function(){
+      // console.log(">>>this.selectedNameIds", this.selectedNameIds.length, this.hoverNameIdx)
+      if (this.inputting || this.selectedNameIds.length < 1) return
+
+      this.$router.push(this.sendTextMessageLink)
+    },
     selectedHandler: function() {
       let fndIndex = -1
       for (let i=0; i<this.names.length; i++) {
@@ -271,6 +283,14 @@ export default {
       }
     });
 
+    autocompleteInput.addEventListener("focus", (evt) => {
+      self.inputting = true
+    });
+    autocompleteInput.addEventListener("blur", (evt) => {
+      self.inputting = false
+    });
+    
+
     document.onkeydown = function(evt) {
       if (![85, 82].includes(evt.keyCode)) self.lastRestoreAction = null
       
@@ -281,6 +301,7 @@ export default {
         case 68: { self.saveState({truncate: true}); self.removeSelected(); break; }
         case 85: { self.prevState(); break; }
         case 82: { if (evt.ctrlKey) self.nextState(); break; }
+        case 84: { self.sendTextMessage(); break; }
         default: 
           // console.log(">>>evt.keyCode", evt.keyCode)
           // ctrlKey
@@ -290,6 +311,9 @@ export default {
     focusOnFilter()
   },
   watch: {
+    inputting: function(_new) {
+      // console.log(`>>>inputting ${_new}`)
+    },
     // $vm0.selectedNameIds = "1,468,112,186,228,209,153,337,456,354,479,271,463,189,474,307,161,178,516,127,407,243,330".split(",").map(entry => parseInt(entry))
     sortOptionsInput: function(_new, _old) {
       if (_new != _old) this.hoverNameIdx = -1

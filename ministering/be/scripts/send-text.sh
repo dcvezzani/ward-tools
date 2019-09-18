@@ -21,8 +21,8 @@ for line in $2; do
 # EOF
   # echo "messageCopy: ${messageCopy}"
 
-  osascript ~/scripts/sendMessage.applescript "$phone" "$MSG"
-  # echo "MSG: $MSG"
+  # osascript ~/scripts/sendMessage.applescript "$phone" "$MSG"
+  echo "MSG: $MSG"
 
   # echo "encoded string: ${1}"
   code="$?"
