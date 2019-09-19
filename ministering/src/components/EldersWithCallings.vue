@@ -1,13 +1,13 @@
 <template>
   <div class="elders-with-callings">
     
-    <ul>
+    <ul class="views">
       <li><a @click="view_mode = 'by_district'" href="#">By District</a></li>
       <li><a @click="view_mode = 'by_organization'" href="#">By Organization</a></li>
     </ul>
 
     <div v-if="view_mode == 'by_district'">
-      <ul>
+      <ul class="dl-jump-links">
         <li><a href="#d1">District 1 ({{leaders[0]}})</a></li>
         <li><a href="#d2">District 2 ({{leaders[1]}})</a></li>
         <li><a href="#d3">District 3 ({{leaders[2]}})</a></li>
@@ -107,4 +107,11 @@ export default {
 h3 {
   background-color: whitesmoke;
 }
+
+.views, .dl-jump-links {
+  margin: 1em 0;
+}
+
+br { display: none; }
+
 </style>

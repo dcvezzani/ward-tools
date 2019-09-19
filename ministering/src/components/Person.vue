@@ -47,6 +47,16 @@ export default {
   .person {
     padding: 10px 0;
   }
+  .person ul li {
+  }
+  .person ul {
+    list-style: inherit;
+    margin: 0 0 0 2em;
+  }
+  .person .label {
+    display: inline;
+    font-weight: inherit;
+  }
   h3 {
     padding: 0;
     margin: 0;
@@ -59,8 +69,8 @@ export default {
 
   .position, 
   .position .position-details {
-    padding: 0 *; 
-    margin: 0; 
   }
+  
+  .person .name { font-weight: bold; }
   
 </style>

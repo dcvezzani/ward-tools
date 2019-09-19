@@ -22,7 +22,9 @@ for line in $2; do
   # echo "messageCopy: ${messageCopy}"
 
   # osascript ~/scripts/sendMessage.applescript "$phone" "$MSG"
-  echo "MSG: $MSG"
+  osascript ./scripts/sendMessage.scpt "$phone" "$MSG"
+  # echo "MSG: $MSG"
+  # echo $(pwd)
 
   # echo "encoded string: ${1}"
   code="$?"

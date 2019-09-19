@@ -35,5 +35,9 @@ export default {
 .contact-info {
   padding-left: 2em;
 }
+.family ul {
+  list-style: inherit;
+  margin-left: 2em;
+}
 </style>
 

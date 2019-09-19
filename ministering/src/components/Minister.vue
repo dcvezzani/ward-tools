@@ -1,5 +1,5 @@
 <template>
-  <div v-if="type == 'supervisor'">
+  <div class="supervisor" v-if="type == 'supervisor'">
     Presidency Member: <span class="minister-name">{{ name }}</span> <span class="contact-info"> <span>{{ phone }}</span> | <span>{{ email }}</span> </span>
   </div>
   <div v-else="">
@@ -34,6 +34,10 @@ export default {
 }
 .contact-info {
   padding-left: 2em;
+}
+.supervisor {
+  margin: 0 0 1em 0;
+  font-style: italic;
 }
 </style>
 

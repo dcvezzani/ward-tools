@@ -40,10 +40,11 @@
       <Group :districts="districts" inline-template>
         <div>
           <h3>Brothers who need a companion</h3>
+          <br>
           <table class="concerns" style="">
             <tr v-for="district in districts" :key="district.id">
               <td>
-                <p><span class="label">District leader:</span> {{district.leader}}</p>
+                <p><span class="district-leader">District leader:</span> {{district.leader}}</p>
                 <table class="district-concerns">
                   <tr v-for="brother in district.brothers" :key="brother.id"> <td style="width: 400px;">{{brother.name_age}}</td> <td style="width: 150px;">{{brother.district_name}}</td> </tr>
                 </table>
@@ -61,7 +62,7 @@
           <table class="concerns" style="">
             <tr v-for="district in districts" :key="district.id">
               <td>
-                <p><span class="label">District leader:</span> {{district.leader}}</p>
+                <p><span class="district-leader">District leader:</span> {{district.leader}}</p>
                 <table class="district-concerns">
                   <tr v-for="family in district.families" :key="family.id"> <td style="width: 400px;">{{family.name}}</td> <td style="width: 150px;">{{family.district_name}}</td> </tr>
                 </table>
@@ -118,7 +119,7 @@ export default {
   data() {
     return {
       report: {},
-      view: "simple", // simple, table
+      view: "table", // simple, table
     }
   },
   computed: {
@@ -180,11 +181,21 @@ export default {
     padding: 2px;
   }
 
-  .concerns .label {
+  .concerns .district-leader {
     font-weight: bold;
+    margin: 1em auto;
   }
 
   .ministering-concerns h3 {
     background: whitesmoke;
   }
+
+  .ministering-concerns p {
+    margin: 1em auto;
+  }
+
+  .ministering-concerns h3 {
+    margin-top: 2em;
+  }
+  br { display: none; }
 </style>

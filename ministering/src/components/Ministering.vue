@@ -1,6 +1,5 @@
 <template>
   <div class="ministering">
-    <h1>{{ msg }}</h1>
 
     <div class="district" v-for="district in ministeringAssignments">
     <District  
@@ -10,7 +9,7 @@
       inline-template>
 
       <div>
-        <h2>{{ districtName }}</h2>
+        <h2 class="district-name">{{ districtName }}</h2>
 
         <div class="companionship" v-for="companionship in companionships">
 
@@ -29,8 +28,8 @@
           :assignments.sync="companionship.assignments" 
           :ministers.sync="companionship.ministers" 
           inline-template>
-          <div>
-            <div class="columns ministers">
+          <div class="columns">
+            <div class="ministers column">
             <div class="minister" v-for="minister in ministers">
             <Minister
               type="minister"
@@ -43,7 +42,7 @@
             </div>
             </div>
           
-            <div class="columns assignments">
+            <div class="assignments column">
             <div class="assignment" v-for="assignment in assignments">
             <Family
               :name.sync="assignment.name" 
@@ -128,6 +127,11 @@ export default {
   clear: both;
   width: 100%;
 }
+.district-name {
+  font-weight: bold;
+  background-color: whitesmoke; 
+  border-bottom: 1px solid silver;
+}
 .supervisor {
   display: block;
 }
@@ -137,12 +141,12 @@ export default {
   padding-top: 1em;
   padding-bottom: 1em;
 }
-.columns {
-  margin-top: 1em;
-  width: 45%;
-  display: inline-block;
-  vertical-align: top;
-}
+/* .columns { */
+/*   margin-top: 1em; */
+/*   width: 45%; */
+/*   display: inline-block; */
+/*   vertical-align: top; */
+/* } */
 .ministers {
 }
 .assignments {
