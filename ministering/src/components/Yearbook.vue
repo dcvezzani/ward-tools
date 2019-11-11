@@ -111,8 +111,14 @@ Vue.component('YearbookEntry', {
     }
   },
   computed: {
+    photoMods: function() {
+      return this.photoModifications
+      //return (this.photoModifications)
+      //  ? this.photoModifications
+      //  : {active: 'elderPhoto', backgroundPositionX: 'center', backgroundPositionY: 'center', backgroundSize: 'cover'}
+    },
     modeStyle: function() {
-      return "background: url('" + this.entry[this.photoModifications.active] + "') " + this.photoModifications.backgroundPositionX + " " + this.photoModifications.backgroundPositionY + " / " + this.photoModifications.backgroundSize + " no-repeat rgb(255, 255, 255); display: inline-block; height: 200px; width: 200px;"
+      return "background: url('" + this.removeQuotes(this.entry[this.photoMods.active]) + "') " + this.photoMods.backgroundPositionX + " " + this.photoMods.backgroundPositionY + " / " + this.photoMods.backgroundSize + " no-repeat rgb(255, 255, 255); display: inline-block; height: 200px; width: 200px;"
     },
     classNames: function() {
       return ['photo', (this.selected || this.highlighted) ? 'selected' : '']
@@ -122,6 +128,10 @@ Vue.component('YearbookEntry', {
     onmouseoverHandler,
     onmouseoutHandler,
     onmousedownHandler,
+    // TODO: consider keeping data clean from the start; the problem starts with the data in LCR; "name": "Vezzani, Jordan \"Vezzani\"",
+    removeQuotes: function (val) { 
+      return val.replace(/\"/g, '')
+    },
     toggleMode: function () {
       this.photoModifications.active = (this.photoModifications.active != 'elderPhoto') ? 'elderPhoto' : 'familyPhoto'
     },
@@ -198,14 +208,20 @@ export default {
   },
   async mounted() {
     this.yearbook = yearbook
-    this.photoModifications = await this.loadPhotoAttributes()
 
-    if (!this.photoModifications) {
-      this.photoModifications = yearbook.reduce((entries, entry) => {
-        entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
-        return entries
-      }, {})
-    }
+    const _photoModifications = yearbook.reduce((entries, entry) => {
+      entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
+      return entries
+    }, {})
+    
+    this.photoModifications = {..._photoModifications, ...(await this.loadPhotoAttributes())}
+
+    // if (!this.photoModifications) {
+    //   this.photoModifications = yearbook.reduce((entries, entry) => {
+    //     entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
+    //     return entries
+    //   }, {})
+    // }
 
     document.onkeydown = function(evt) {
         evt = evt || window.event;

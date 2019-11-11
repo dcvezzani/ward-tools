@@ -8,6 +8,7 @@ import Yearbook from '@/components/Yearbook.vue'
 import Directory from '@/components/Directory.vue'
 import MinisteringConcerns from '@/components/MinisteringConcerns.vue'
 import MassPrivatePersonalText from '@/components/MassPrivatePersonalText.vue'
+import TextList from '@/components/TextList.vue'
 
 Vue.use(Router)
 
@@ -49,6 +50,11 @@ export default new Router({
       path: '/yearbook',
       name: 'Yearbook',
       component: Yearbook
+    },
+    {
+      path: '/textlist',
+      name: 'TextList',
+      component: TextList
     },
     {
       path: '/about',

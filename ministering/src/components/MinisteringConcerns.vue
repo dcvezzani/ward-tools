@@ -197,5 +197,5 @@ export default {
   .ministering-concerns h3 {
     margin-top: 2em;
   }
-  br { display: none; }
+  .minitering-concerns br { display: none; }
 </style>

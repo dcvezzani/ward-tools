@@ -62,15 +62,6 @@ const process = () => {
           cb()
         });
       },
-      // available_eq: (cb) => {
-      //   const filtered_eq = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
-      //   data.available_brothers = filtered_eq
-      //   fs.writeFile('available_eq.json', JSON.stringify(filtered_eq), (err) => {
-      //     if (err) return cb(err)
-      //     console.log('The file has been saved!');
-      //     cb()
-      //   });
-      // },
       ym: (cb) => {
         fs.readFile('./ym-cleaned.json', (err, content) => {
           if (err) return cb(err)
@@ -104,6 +95,15 @@ const process = () => {
           cb()
         });
       },
+      available_eq: (cb) => {
+        const filtered_eq = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
+        data.available_brothers = filtered_eq
+        fs.writeFile('available_eq.json', JSON.stringify(filtered_eq), (err) => {
+          if (err) return cb(err)
+          console.log('The file (available_eq.json) has been saved!');
+          cb()
+        });
+      },
       current_assignments: (cb) => {
         fs.readFile('./ministering-eq.json', (err, content) => {
           if (err) return cb(err)
@@ -132,6 +132,7 @@ const process = () => {
                 const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
                 return {phone, email, address, name}
               })
+              if (!companionship.assignments) companionship.assignments = []
               const assignments = companionship.assignments.map(assignment => {
                 const {phone, email, address, name, members} = {phone: '', email: '', address: '',  ...data.directory[assignment.name]}
 // if (assignment.name.match(/Vezzani/)) console.log(">>>assignment, vezzani", members)
@@ -151,7 +152,7 @@ const process = () => {
  
         fs.writeFile('ministering-assignments-print-out.json', JSON.stringify(chk), (err) => {
           if (err) throw err;
-          console.log('The file has been saved!');
+          console.log('The file (ministering-assignments-print-out.json) has been saved!');
           cb()
         });
           
@@ -224,7 +225,7 @@ const process = () => {
         
         fs.writeFile('report.json', JSON.stringify(report), (err) => {
           if (err) throw err;
-          console.log('The file has been saved!');
+          console.log('The file (report.json) has been saved!');
           resolve()
         });
     })

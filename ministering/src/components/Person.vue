@@ -1,7 +1,7 @@
 <template>
   <div class="person">
     <h3 class="name">{{person.name}}</h3>
-    <div class="address"><span class="label">Address: </span>(<span class="district">{{person.district}}</span>) </span><span class="value" v-html="person.address"></span></div>
+    <div class="address"><span class="label">Address: </span>(<span class="district">{{person.district}}</span>) </span><span class="value" v-html="addressWithComma"></span></div>
     <div class="phone"><span class="label">Phone: </span><span class="value"><a :href="phone">{{person.phone}}</a></span></div>
     <div class="email"><span class="label">Email: </span><span class="value"><a :href="email">{{person.email}}</a></span></div>
     <div class="age"><span class="label">Age: </span><span class="value">{{person.age}}</span></span></div>
@@ -32,6 +32,9 @@ export default {
   components: { },
   props: ['person', 'show-positions'],
   computed: {
+    addressWithComma: function() {
+      return this.person.address.replace(/<br[ \/]*>/g, ', ')
+    },
     phone: function() {
       return `tel:${this.person.phone}`
     },
