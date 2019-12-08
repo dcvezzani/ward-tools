@@ -8,6 +8,7 @@
       <router-link to="/ministering-concerns">Ministering Concerns</router-link> |
       <router-link to="/directory">Directory</router-link> |
       <router-link to="/textlist">Text Lists</router-link> |
+      <router-link to="/emaillist">Email Lists</router-link> |
       <router-link to="/about">About</router-link>
     </div>
     <router-view/>

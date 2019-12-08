@@ -9,6 +9,7 @@ import Directory from '@/components/Directory.vue'
 import MinisteringConcerns from '@/components/MinisteringConcerns.vue'
 import MassPrivatePersonalText from '@/components/MassPrivatePersonalText.vue'
 import TextList from '@/components/TextList.vue'
+import EmailList from '@/components/EmailList.vue'
 
 Vue.use(Router)
 
@@ -55,6 +56,11 @@ export default new Router({
       path: '/textlist',
       name: 'TextList',
       component: TextList
+    },
+    {
+      path: '/emaillist',
+      name: 'EmailList',
+      component: EmailList
     },
     {
       path: '/about',
