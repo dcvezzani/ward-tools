@@ -35,12 +35,12 @@
 
     <div v-if="view_mode == 'by_organization'">
       <ul>
-        <li><a href="#ym">Young Men</a></li>
+        <li><a href="#ym">Aaronic Priesthood Quorums</a></li>
         <li><a href="#primary">Primary</a></li>
         <li><a href="#other">Other</a></li>
       </ul>
 
-      <h3><a name="ym">Young Men</a></h3><br>
+      <h3><a name="ym">Aaronic Priesthood Quorums</a></h3><br>
       <div v-for="elder in elders_ym" :key="elder.idx" class="elder">
         <Person :person="elder" :show-positions="true"></Person>
         <br/>
@@ -95,9 +95,9 @@ export default {
     this.elders_d3 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^03')).sort(sort_by_name)
 
     
-    this.elders_ym = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.positions.filter(p => p.organization === "Young Men").length > 0).sort(sort_by_name)
+    this.elders_ym = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.positions.filter(p => p.organization === "Aaronic Priesthood Quorums").length > 0).sort(sort_by_name)
     this.elders_primary = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.positions.filter(p => p.organization === "Primary").length > 0).sort(sort_by_name)
-    this.elders_others = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.positions.filter(p => (p.organization === "Young Men" || p.organization === "Primary")).length === 0).sort(sort_by_name)
+    this.elders_others = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.positions.filter(p => (p.organization === "Aaronic Priesthood Quorums" || p.organization === "Primary")).length === 0).sort(sort_by_name)
   },
 }
 </script>
