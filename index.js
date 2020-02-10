@@ -80,18 +80,23 @@ const process = () => {
           if (err) return cb(err)
           data.ignore = JSON.parse(content);
           data.ignore_names = data.ignore.map(brother => brother.name)
+          // console.log(">>>data.ignore_names", JSON.stringify(data.ignore_names, null, 2))
           data.ignore_families = data.ignore.map(family => family.uuid)
+          // console.log(">>>data.ignore_families", JSON.stringify(data.ignore_families, null, 2))
 
           // remove ignored ministering brothers
           data.available_brothers = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
           
           // remove ignored families
-          // data.available_families = data.available_families.filter(family => {
-          //   family.members.reduce((res, member) => {
-          //     res = (!data.ignore_families.includes(member.uuid) && res)
-          //     return res
-          //   }, true)
-          // })
+          data.available_families = data.available_families.filter(family => {
+            // if (family.uuid === '224f6b10-9880-4bfc-8cf0-79d725315d0c')
+            // console.log(">>>family.uuid", family.uuid)
+
+            return family.members.reduce((res, member) => {
+              res = (!data.ignore_families.includes(member.uuid) && res)
+              return res
+            }, true)
+          })
           cb()
         });
       },

@@ -1,6 +1,6 @@
 [
       {
-        "uuid": "c03c86cc-39f6-4e9c-bd9e-ccedea86366b",
+        "uuid": "2730b344-29e9-41a2-88e7-35f4f65c169a",
         "name": "Zabriskie, Matt"
       },
       {
@@ -10,6 +10,42 @@
       {
         "uuid": "224f6b10-9880-4bfc-8cf0-79d725315d0c",
         "name": "Nitta, Rick"
+      },
+      {
+        "uuid": "480d96d4-66b4-4c70-8749-52bf058fb091",
+        "householdUuid": "6779bc7a-95ea-42ef-b938-cde3ba37213d",
+        "unitNumber": 13730,
+        "head": false,
+        "adult": false,
+        "name": "Quackenbush, Zerrin"
+      },
+      {
+        "uuid": "5587136e-59d2-436e-ac51-4ccf56c771ae",
+        "householdUuid": "224f6b10-9880-4bfc-8cf0-79d725315d0c",
+        "unitNumber": 13730,
+        "head": false,
+        "adult": false,
+        "name": "Zabriskie, Cohen Michael"
+      },
+      {
+        "uuid": "a57c0b28-54c8-4e37-abad-3e69b7841c15",
+        "householdUuid": "2bab4220-b9a9-4eae-bfd4-4c173ec131b3",
+        "unitNumber": 13730,
+        "head": true,
+        "adult": true,
+        "name": "Vezzani, Jordan \"Vezzani\"",
+        "displayName": "Jordan \"Vezzani\" Vezzani",
+        "givenName": "Jordan \"Vezzani\"",
+        "surname": "Vezzani",
+        "phone": "801-404-8761",
+        "email": "jordanthemormon14@gmail.com",
+        "privacy": {
+          "master": "STAKE",
+          "photo": "STAKE",
+          "phone": "STAKE",
+          "email": "STAKE"
+        },
+        "editable": false
       },
       {
         "name": "Bertoch, Jason",
