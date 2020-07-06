@@ -7,7 +7,7 @@
         :showGivenName="showGivenName"
         inline-template>
         <div>
-          <span>{{elder.phone}}</span><span>,{{elder.surname}}</span><span v-show="showGivenName">,{{elder.givenName}}</span>
+          <span>{{elder.email}}</span><span>,{{elder.surname}}</span><span v-show="showGivenName">,{{elder.givenName}}</span>
         </div>
       </TextListEntry>
     </div>
@@ -42,6 +42,9 @@ export default {
     eldersWithPhone: function() {
       return this.elders.filter(elder => elder.phone && elder.phone.length > 0)
     },
+    eldersWithEmail: function() {
+      return this.elders.filter(elder => elder.email && elder.email.length > 0)
+    },
   },
   data() {
     return {
@@ -53,12 +56,15 @@ export default {
     cleanPhone: function(phone) {
       return (phone) ? phone.replace(/[-()\. ]/g, '') : ''
     },
+    cleanEmail: function(email) {
+      return (email) ? email : '(none)'
+    },
     cleanSurname: function(name) {
       return (name) ? name.replace(/\'/g, '') : ''
     },
   },
   mounted() {
-    this.elders = availableEqMembers.filter(e => ['HIGH_PRIEST', 'ELDER'].includes(e.priesthood)).map(e => ({givenName: e.givenName, surname: this.cleanSurname(e.surname), phone: this.cleanPhone(e.phone), idx: uuidv4()}))
+    this.elders = availableEqMembers.filter(e => ['HIGH_PRIEST', 'ELDER'].includes(e.priesthood)).map(e => ({givenName: e.givenName, surname: this.cleanSurname(e.surname), phone: this.cleanPhone(e.phone), email: this.cleanEmail(e.email), idx: uuidv4()}))
   },
 }
 </script>
