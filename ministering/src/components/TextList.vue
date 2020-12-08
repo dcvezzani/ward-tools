@@ -7,7 +7,7 @@
         :showGivenName="showGivenName"
         inline-template>
         <div>
-          <span>{{elder.email}}</span><span>,{{elder.surname}}</span><span v-show="showGivenName">,{{elder.givenName}}</span>
+          <span>{{elder.phone}}</span><span>,{{elder.surname}}</span><span v-show="showGivenName">,{{elder.givenName}}</span>
         </div>
       </TextListEntry>
     </div>
