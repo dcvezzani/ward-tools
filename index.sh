@@ -105,7 +105,14 @@ curl 'https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ' -H 'Conn
 
 sleep 2
 
-cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + $companionship.ministers))) | sort_by(.name)' > ministering-brothers.json
+# cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + $companionship.ministers | map(. * {hasCompanion: (if(($companionship.ministers | length) > 1) then (1) else (0) end), count: ($companionship.ministers | length), ministers: $companionship.ministers})))) | sort_by(.name)' > ministering-brothers.json
+
+# cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + $companionship.ministers))) | sort_by(.name)' > ministering-brothers.json
+
+# include boolean flag indicating if there are more than 1 elder in a companionship
+# if there is only 1 elder assigned, include him in the list of brothers who need a ministering companion
+# hasCompanion: (1 - 2 or more; 0 - 1 or less) brothers assigned to companionship
+cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + ($companionship.ministers as $ministers | $ministers | map(. as $elder | (if (($ministers | length) > 1) then (1) else (0) end) as $hasCompanion | $elder * {companionshipMembersSize: ($ministers | length), hasCompanion: $hasCompanion}))))) | sort_by(.name)' > ministering-brothers.json
 
 cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + $companionship.assignments))) | sort_by(.name)' > ministering-families.json
 sleep 2

@@ -133,10 +133,21 @@ const process = () => {
             const {phone, email, address, name} = data.directory[supervisorName]
 
             const companionships = district.companionships.map(companionship => {
-              const ministers = companionship.ministers.map(minister => {
-                const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
-                return {phone, email, address, name}
-              })
+              // const ministers = companionship.ministers.map(minister => {
+              //   const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
+              //   return {phone, email, address, name}
+              // })
+
+              let ministers = []
+              if (companionship.ministers.length > 1) {
+                ministers = companionship.ministers.map(minister => {
+                  const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
+                  return {phone, email, address, name}
+                })
+              } else {
+                // console.log(">>>companionship.ministers", companionship.ministers)
+              }
+
               if (!companionship.assignments) companionship.assignments = []
               const assignments = companionship.assignments.map(assignment => {
                 const {phone, email, address, name, members} = {phone: '', email: '', address: '',  ...data.directory[assignment.name]}
@@ -167,8 +178,8 @@ const process = () => {
       assigned_brothers: (cb) => {
         fs.readFile('./ministering-brothers.json', (err, content) => {
           if (err) return cb(err)
-          data.assigned_brothers = JSON.parse(content)
-          // console.log(">>>data.assigned_brothers", data.assigned_brothers)
+          data.assigned_brothers = JSON.parse(content).filter(brother => brother.hasCompanion === 1)
+          // console.log(">>>data.assigned_brothers", data.assigned_brothers.find(brother => brother.name.startsWith('Ash')))
           cb()
         });
       },
@@ -183,12 +194,15 @@ const process = () => {
       unassigned_brothers: (cb) => {
         // console.log(">>>data.available_brothers", data.available_brothers);
         const available_brothers_names = data.available_brothers.map(brother => brother.name)
+        console.log(">>>available_brothers_names", available_brothers_names.find(name => name.startsWith('Ash')));
         const assigned_brothers_names = data.assigned_brothers.map(brother => brother.name)
+        console.log(">>>assigned_brothers_names", assigned_brothers_names.find(name => name.startsWith('Ash')));
+
         const unassigned_brothers_names = available_brothers_names.filter(brother => !assigned_brothers_names.includes(brother))
-        // console.log(">>>unassigned_brothers", unassigned_brothers_names);
+        console.log(">>>unassigned_brothers_names", unassigned_brothers_names.find(name => name.startsWith('Ash')));
 
         data.unassigned_brothers = data.available_brothers.filter(brother => unassigned_brothers_names.includes(brother.name))
-        // console.log(">>>data.unassigned_brothers", data.unassigned_brothers);
+        console.log(">>>data.unassigned_brothers", data.unassigned_brothers.find(brother => brother.name.startsWith('Ash')));
 
         cb()
       },
