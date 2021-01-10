@@ -1,6 +1,14 @@
 <template>
   <div class="ministering-concerns">
-    View: {{view}}; show <button @click="toggleView">{{(view == 'simple') ? 'table' : 'simple'}}</button>
+    <div>
+      View: {{view}}; show <button @click="toggleView">{{(view == 'simple') ? 'table' : 'simple'}}</button>
+    </div>
+
+    <div>
+      <input type="checkbox" id="include-ym" v-model="includeYm">
+      <label for="include-ym"> Include YM?</label>
+    </div>
+
     <div v-show="view == 'simple'" class="view-01">
       <Group :districts="districts" inline-template>
         <div>
@@ -81,6 +89,8 @@
 import Vue from 'vue'
 import report from '../../../report-summary.json'
 
+const YM_MINISTERING_AGE_THRESHOLD = 18
+
 String.prototype.hashCode = function() {
   var hash = 0, i, chr;
   if (this.length === 0) return hash;
@@ -92,12 +102,33 @@ String.prototype.hashCode = function() {
   return hash;
 };
 
-const getBrothers = (data, districtNumber) => {
+const getBrothers = (data, districtNumber, options) => {
+  const { includeYm } = options
   const re = new RegExp(`^0${districtNumber}-`)
-  return Object.keys(data.ministering_brothers).filter(district_name => district_name.match(re)).reduce((list, district_name) => {
-    const brothers = data.ministering_brothers[district_name].map(name_age => ({id: name_age.hashCode(), name_age, district_name}))
+  var reAge = /\(([^\)]*)\)/
+
+  return Object.keys(data.ministering_brothers)
+  .filter(district_name => district_name.match(re))
+  .reduce((list, district_name) => {
+
+    let brothers = data.ministering_brothers[district_name]
+
+    // if the option is turned off to include YM ministering companions in the
+    // report for ministers without companions, do not include YM ministering
+    // brothers
+    if (!includeYm) brothers = brothers
+      .filter(brother => {
+        const md = brother.match(reAge)
+        const brotherAge = Number.parseInt(md[1])
+        return brotherAge >= YM_MINISTERING_AGE_THRESHOLD
+      })
+
+    brothers = brothers
+    .map(name_age => ({id: name_age.hashCode(), name_age, district_name}))
+
     list = list.concat(brothers)
     return list
+
   }, [])
 };
 
@@ -120,10 +151,12 @@ export default {
     return {
       report: {},
       view: "table", // simple, table
+      includeYm: false,
     }
   },
   computed: {
     districts: function() {
+      const { includeYm } = this
       let data = [
         {id: 1, leader: "Pres. Nitta", brothers: [], families: []},
         {id: 2, leader: "Bro. Fidler", brothers: [], families: []},
@@ -131,9 +164,9 @@ export default {
       ]
       if (!this.report || !this.report.ministering_brothers) return data
 
-      data[0].brothers = getBrothers(this.report, 1)
-      data[1].brothers = getBrothers(this.report, 2)
-      data[2].brothers = getBrothers(this.report, 3)
+      data[0].brothers = getBrothers(this.report, 1, { includeYm })
+      data[1].brothers = getBrothers(this.report, 2, { includeYm })
+      data[2].brothers = getBrothers(this.report, 3, { includeYm })
 
       data[0].families = getFamilies(this.report, 1)
       data[1].families = getFamilies(this.report, 2)
