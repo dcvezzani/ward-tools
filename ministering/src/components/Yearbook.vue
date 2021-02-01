@@ -1,7 +1,17 @@
 <template>
   <div class="yearbook">
+    <div class="filters">
+      Filters (include): 
+      <input type="checkbox" id="district-01" v-model="filters.district01.value" /> <label for="district-01">District 1</label>
+      <input type="checkbox" id="district-02" v-model="filters.district02.value" /> <label for="district-02">District 2</label>
+      <input type="checkbox" id="district-03" v-model="filters.district03.value" /> <label for="district-03">District 3</label>
+      <input type="checkbox" id="alloy" v-model="filters.alloy.value" /> <label for="alloy">Alloy</label>
+      <input type="checkbox" id="sterling-loop" v-model="filters['sterling-loop'].value" /> <label for="sterling-loop">Sterling Loop</label>
+    </div>
+
     <div><button @click="savePhotoAttributes">save</button> | <button @click="loadPhotoAttributes">load</button></div>
-    <YearbookEntry v-if="photoModificationsLoaded" v-for="entry in yearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]" class="yearbook-entry" inline-template>
+
+    <YearbookEntry v-if="photoModificationsLoaded && filteredYearbook" v-for="entry in filteredYearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]" class="yearbook-entry" inline-template>
       <div :data-id="entry.uuid" @mouseover="onmouseoverHandler" @mousedown="onmousedownHandler" @mouseout="onmouseoutHandler" @click="toggleMode" :class="classNames" :style="modeStyle"><span class="label"><span class="text truncate">{{ entry.name }}</span></span></div>
     </YearbookEntry>
   </div>
@@ -175,9 +185,20 @@ export default {
     return {
       yearbook: [],
       photoModifications: {},
+      filters: {
+        district01: {value: true, id: '01'},
+        district02: {value: true, id: '02'},
+        district03: {value: true, id: '03'},
+        alloy: {value: false, id: 'alloy'},
+        'sterling-loop': {value: false, id: 'sterling-loop'},
+      }
     }
   },
   computed: {
+    filteredYearbook: function() {
+      const activeDistrictIds = Object.keys(this.filters).filter(key => this.filters[key].value).map(key => this.filters[key].id)
+      return this.yearbook.filter(entry => activeDistrictIds.some(id => entry.district.includes(id)))
+    },
     photoModificationsLoaded: function() {
       return (this.photoModifications && Object.keys(this.photoModifications).length > 0)
     }
@@ -307,5 +328,13 @@ const selectPhoto = (selected) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.filters input {
+margin-left: 2em;
+margin-right: 5px;
+}
+.filters input:first-child {
+margin-left: 1em;
 }
 </style>
