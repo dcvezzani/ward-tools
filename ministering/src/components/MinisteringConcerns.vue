@@ -158,9 +158,9 @@ export default {
     districts: function() {
       const { includeYm } = this
       let data = [
-        {id: 1, leader: "Pres. Nitta", brothers: [], families: []},
-        {id: 2, leader: "Bro. Fidler", brothers: [], families: []},
-        {id: 3, leader: "Bro. Stilson", brothers: [], families: []},
+        {id: 1, leader: "Pres. Vezzani", brothers: [], families: []},
+        {id: 2, leader: "Bro. Moore", brothers: [], families: []},
+        {id: 3, leader: "Bro. Voorheis", brothers: [], families: []},
       ]
       if (!this.report || !this.report.ministering_brothers) return data
 

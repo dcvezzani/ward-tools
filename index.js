@@ -130,9 +130,10 @@ const process = () => {
 
           const chk = data.current_assignments.map(district => {
             const { districtName, supervisorName } = district;
+            if (!supervisorName) return { districtName, supervisor: {}, companionships: [] }
             const {phone, email, address, name} = data.directory[supervisorName]
 
-            const companionships = district.companionships.map(companionship => {
+            const companionships = (district.companionships || []).map(companionship => {
               // const ministers = companionship.ministers.map(minister => {
               //   const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
               //   return {phone, email, address, name}

@@ -46,7 +46,44 @@ sleep 2
 
 cp directory.json directory-orig.json
 
-cat directory-orig.json | jq 'def neighborhood: if (. | test( "Dry Creek"; "i" )) then "03-dry-creek" elif (. | test( "Quivira"; "i" )) then "03-quivira" elif (. | test( "Hackberry"; "i" )) then "02-hackberry" elif (. | test( "Samara"; "i" )) then "02-samara" elif (. | test( "Sicula"; "i" )) then "02-sicula" elif (. | test( "Serrata"; "i" )) then "02-serrata" elif (. | test( "Silver Oak"; "i" )) then "03-silver-oak" elif (. | test( "Sterling"; "i" )) then "01-sterling-loop" elif (. | test( "Syracuse"; "i" )) then "02-syracuse" elif (. | test( "Drupe"; "i" )) then "02-drupe" elif (. | test( "Unity M"; "i" )) then "01-alloy-m" elif (. | test( "Unity N"; "i" )) then "01-alloy-n" elif (. | test( "Unity P"; "i" )) then "01-alloy-p" elif (. | test( "Unity Q"; "i" )) then "01-alloy-q" elif (. | test( "Unit M"; "i" )) then "01-alloy-m" elif (. | test( "Unit N"; "i" )) then "01-alloy-n" elif (. | test( "Unit P"; "i" )) then "01-alloy-p" elif (. | test( "Unit Q"; "i" )) then "01-alloy-q" elif (. | test( "Apt M"; "i" )) then "01-alloy-m" elif (. | test( "Apt N"; "i" )) then "01-alloy-n" elif (. | test( "Apt P"; "i" )) then "01-alloy-p" elif (. | test( "Apt Q"; "i" )) then "01-alloy-q" elif (. | test( "Unt M"; "i" )) then "01-alloy-m" elif (. | test( "Unt N"; "i" )) then "01-alloy-n" elif (. | test( "Unt P"; "i" )) then "01-alloy-p" elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" else "n/a" end; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > directory.json
+# elif (. | test( "Hackberry"; "i" )) then "02-hackberry" 
+# elif (. | test( "Samara"; "i" )) then "02-samara" 
+# elif (. | test( "Sicula"; "i" )) then "02-sicula" 
+# elif (. | test( "Serrata"; "i" )) then "02-serrata" 
+# elif (. | test( "Syracuse"; "i" )) then "02-syracuse" 
+# elif (. | test( "Drupe"; "i" )) then "02-drupe" 
+
+# elif (. | test( "Silver Oak"; "i" )) then "03-silver-oak" 
+# if (. | test( "Dry Creek"; "i" )) then "02-dry-creek" 
+# if (. | test( "Dry Creek"; "i" )) then (if (. | split(" ")[0] | tonumber | if(. == 124 or . == 132 or . == 140) then ("03-dry-creek") else ("02-dry-creek") end)) 
+# if (. | test( "Dry Creek"; "i" )) then (if (. | split(" ")[0] | tonumber | if([.] | contains([124, 132, 140])) then ("03-dry-creek") else ("02-dry-creek") end)) 
+  
+cat directory-orig.json | jq 'def neighborhood: 
+if (. | test( "Dry Creek"; "i" )) then (
+  . | split(" ")[0] | tonumber | if(. == 124 or . == 132 or . == 140) then ("03-dry-creek") else ("02-dry-creek") end
+)
+elif (. | test( "Quivira"; "i" )) then "02-quivira" 
+elif (. | test( "Silver Oak"; "i" )) then (
+  . | split(" ")[0] | tonumber | if(. < 112) then ("03-silver-oak") else ("02-silver-oak") end
+)
+elif (. | test( "Sterling"; "i" )) then "03-sterling-loop" 
+elif (. | test( "Unity M"; "i" )) then "01-alloy-m" 
+elif (. | test( "Unity N"; "i" )) then "01-alloy-n" 
+elif (. | test( "Unity P"; "i" )) then "01-alloy-p" 
+elif (. | test( "Unity Q"; "i" )) then "01-alloy-q" 
+elif (. | test( "Unit M"; "i" )) then "01-alloy-m" 
+elif (. | test( "Unit N"; "i" )) then "01-alloy-n" 
+elif (. | test( "Unit P"; "i" )) then "01-alloy-p" 
+elif (. | test( "Unit Q"; "i" )) then "01-alloy-q" 
+elif (. | test( "Apt M"; "i" )) then "01-alloy-m" 
+elif (. | test( "Apt N"; "i" )) then "01-alloy-n" 
+elif (. | test( "Apt P"; "i" )) then "01-alloy-p" 
+elif (. | test( "Apt Q"; "i" )) then "01-alloy-q" 
+elif (. | test( "Unt M"; "i" )) then "01-alloy-m" 
+elif (. | test( "Unt N"; "i" )) then "01-alloy-n" 
+elif (. | test( "Unt P"; "i" )) then "01-alloy-p" 
+elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" 
+else "n/a" end; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > directory.json
 
 # cat directory.json | jq 'def neighborhood: if (. | test( "Dry Creek"; "i" )) then "03-dry-creek" elif (. | test( "Quivira"; "i" )) then "03-quivira" elif (. | test( "Hackberry"; "i" )) then "02-hackberry" elif (. | test( "Samara"; "i" )) then "02-samara" elif (. | test( "Serrata"; "i" )) then "02-serrata" elif (. | test( "Silver Oak"; "i" )) then "03-silver-oak" elif (. | test( "Sterling"; "i" )) then "01-sterling-loop" elif (. | test( "Syracuse"; "i" )) then "02-syracuse" elif (. | test( "Drupe"; "i" )) then "02-drupe" elif (. | test( "Unity M"; "i" )) then "01-alloy-m" elif (. | test( "Unity N"; "i" )) then "01-alloy-n" elif (. | test( "Unity P"; "i" )) then "01-alloy-p" elif (. | test( "Unity Q"; "i" )) then "01-alloy-q" elif (. | test( "Unit M"; "i" )) then "01-alloy-m" elif (. | test( "Unit N"; "i" )) then "01-alloy-n" elif (. | test( "Unit P"; "i" )) then "01-alloy-p" elif (. | test( "Unit Q"; "i" )) then "01-alloy-q" elif (. | test( "Apt M"; "i" )) then "01-alloy-m" elif (. | test( "Apt N"; "i" )) then "01-alloy-n" elif (. | test( "Apt P"; "i" )) then "01-alloy-p" elif (. | test( "Apt Q"; "i" )) then "01-alloy-q" elif (. | test( "Unt M"; "i" )) then "01-alloy-m" elif (. | test( "Unt N"; "i" )) then "01-alloy-n" elif (. | test( "Unt P"; "i" )) then "01-alloy-p" elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" else "n/a" end; reduce .[] as $entry ([]; . + (($entry.address | neighborhood) as $district | $entry.members | map({uuid, name, phone, email, address: $entry.address, $district, members: $entry.members})))'
 
@@ -112,9 +149,9 @@ sleep 2
 # include boolean flag indicating if there are more than 1 elder in a companionship
 # if there is only 1 elder assigned, include him in the list of brothers who need a ministering companion
 # hasCompanion: (1 - 2 or more; 0 - 1 or less) brothers assigned to companionship
-cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + ($companionship.ministers as $ministers | $ministers | map(. as $elder | (if (($ministers | length) > 1) then (1) else (0) end) as $hasCompanion | $elder * {companionshipMembersSize: ($ministers | length), hasCompanion: $hasCompanion}))))) | sort_by(.name)' > ministering-brothers.json
+cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ((if ($district.companionships) then ($district.companionships) else ([]) end) | reduce .[] as $companionship ([]; . + ($companionship.ministers as $ministers | $ministers | map(. as $elder | (if (($ministers | length) > 1) then (1) else (0) end) as $hasCompanion | $elder * {companionshipMembersSize: ($ministers | length), hasCompanion: $hasCompanion}))))) | sort_by(.name)' > ministering-brothers.json
 
-cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ($district.companionships | reduce .[] as $companionship ([]; . + $companionship.assignments))) | sort_by(.name)' > ministering-families.json
+cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ((if ($district.companionships) then ($district.companionships) else ([]) end) | reduce .[] as $companionship ([]; . + $companionship.assignments))) | sort_by(.name)' > ministering-families.json
 sleep 2
 
 echo "export directory versions"

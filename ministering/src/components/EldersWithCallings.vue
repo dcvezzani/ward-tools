@@ -77,7 +77,7 @@ export default {
   data() {
     return {
       view_mode: 'by_district',
-      leaders: ["Pres. Nitta", "Bro. Fidler", "Bro. Stilson"],
+      leaders: ["Pres. Vezzani", "Bro. Moore", "Bro. Voorheis"],
       elders: [],
       elders_d1: [],
       elders_d2: [],
