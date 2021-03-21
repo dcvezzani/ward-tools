@@ -13,12 +13,16 @@
       <li v-for="entry in selectedNames" :key="entry.id">
         <PersonContactInfo :entry="entry" inline-template>
           <div :class="classNames">
-            <div @click="toggleEdit" class="edit-mode"></div>
-
-            <h3 class="name" :class="nameClassNames">{{entry.id}}, {{entry.name}}</h3>
+            <h3 class="name" :class="nameClassNames">{{entry.name}}</h3>
             <div class="phone"><span class="label">Phone: </span><span class="value"><a :href="formattedPhone">{{phone}}</a></span></div>
             <div class="email"><span class="label">Email: </span><span class="value"><a :href="formattedEmail">{{email}}</a></span></div>
-            <div class="address"><span class="label">Address: </span>(<span class="district">{{entry.district}}-{{entry.street}}</span>) </span><span class="value" v-html="entry.address"></span></div>
+            <div class="address"><span class="label">Address: </span><span class="district">({{entry.district}}-{{entry.street}})</span>&nbsp;<span class="value" v-html="entry.address"></span></div>
+            <div><span class="label">&nbsp;</span></div>
+            <div class="actionIcons">
+              <div @click="$parent.removeName(entry.id)" class="icon trash-mode"></div>
+              <div @click="toggleEdit" class="icon edit-mode"></div>
+            </div>
+            
             <div v-if="mode == 'edit'" class="form-actions">
               <div class="field">
                 phone:
@@ -76,7 +80,7 @@ Vue.component('PersonContactInfo', {
   methods: {
     toggleEdit: function(){
       this.mode = (this.mode == 'edit') ? 'view' : 'edit'
-    }
+    },
   },
   mounted(){
     const self = this
@@ -161,6 +165,9 @@ export default {
     }
   },
   methods: {
+    removeName: function(id){
+      this.selectedNameIds = this.selectedNameIds.filter(entryId => entryId != id)
+    },
     sendTextMessage: function(){
       // console.log(">>>this.selectedNameIds", this.selectedNameIds.length, this.hoverNameIdx)
       if (this.inputting || this.selectedNameIds.length < 1) return
@@ -195,7 +202,7 @@ export default {
       const entryId = this.selectedNameIds[this.hoverNameIdx]
       const entryIdx = this.names.findIndex(entry => entry.id == entryId)
       // console.log(">>>select", entryIdx, this.names[entryIdx].selected)
-      this.names[entryIdx].selected = !this.names[entryIdx].selected
+      if (this.names[entryIdx]) this.names[entryIdx].selected = !this.names[entryIdx].selected
     },
     restoreState: function() {
       const state = JSON.parse(this.states[this.stateIdx])
@@ -292,6 +299,8 @@ export default {
     
 
     document.onkeydown = function(evt) {
+      return true
+
       if (![85, 82].includes(evt.keyCode)) self.lastRestoreAction = null
       
       switch(evt.keyCode) {
@@ -362,12 +371,25 @@ export default {
   .person-contact-info .field {
     margin-right: 1em;
   }
-  div.edit-mode {
+
+  div.actionIcons {
     position: relative;
-    float: right;
+    margin-left: 2em;
+  }
+
+  div.icon {
+    position: relative;
     height: 20px;
     width: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+
+  }
+  div.edit-mode {
     background: url('../assets/notes-icon.png') center / cover;
+  }
+  div.trash-mode {
+    background: url('../assets/trash-icon.png') center / cover;
   }
 
   .values-only .entry div {
@@ -377,7 +399,7 @@ export default {
   .person-contact-info .name { width: 200px; }
   .person-contact-info .phone { width: 200px; }
   .person-contact-info .email { width: 250px; }
-  .person-contact-info .address {  }
+  .person-contact-info .address { width: 350px; }
 
   .supportedSortOptions {
     margin-left: 1em;

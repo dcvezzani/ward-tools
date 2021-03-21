@@ -130,6 +130,7 @@ const process = () => {
 
           const chk = data.current_assignments.map(district => {
             const { districtName, supervisorName } = district;
+            // console.log(">>>districtName, supervisorName", { districtName, supervisorName })
             if (!supervisorName) return { districtName, supervisor: {}, companionships: [] }
             const {phone, email, address, name} = data.directory[supervisorName]
 
@@ -138,6 +139,7 @@ const process = () => {
               //   const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
               //   return {phone, email, address, name}
               // })
+              // console.log(">>>companionship", companionship)
 
               let ministers = []
               if (companionship.ministers.length > 1) {

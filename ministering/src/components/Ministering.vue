@@ -1,7 +1,7 @@
 <template>
   <div class="ministering">
 
-    <div class="district" v-for="district in ministeringAssignments">
+    <div class="district" v-if="yearbook" v-for="district in ministeringAssignments">
     <District  
       :companionships.sync="district.companionships" 
       :districtName.sync="district.districtName" 
@@ -20,6 +20,7 @@
           :address.sync="supervisor.address" 
           :phone.sync="supervisor.phone" 
           :email.sync="supervisor.email" 
+          :yearbook="$parent.yearbook"
           >
         </Minister>
         </div>
@@ -37,6 +38,7 @@
               :address.sync="minister.address" 
               :phone.sync="minister.phone" 
               :email.sync="minister.email" 
+              :yearbook="$parent.$parent.yearbook"
               >
             </Minister>
             </div>
@@ -69,6 +71,7 @@
 <script>
 import Vue from 'vue'
 import ministeringAssignments from '../../../ministering-assignments-print-out.json'
+import yearbook from '../../../yearbook.json'
 import Minister from '@/components/Minister.vue'
 import Family from '@/components/Family.vue'
 
@@ -79,6 +82,9 @@ Vue.component('District', {
   data: function () {
     return {
     }
+  },
+  mounted() {
+    // console.log(">>>$parent.yearbook", this.$parent.yearbook)
   },
 })
 
@@ -104,14 +110,20 @@ export default {
   props: {
     msg: String, 
   },
+  methods: {
+    ministerPhoto(minister) {
+      return this.yearbook.find(entry => entry.name === minister.name)
+    }
+  },
   data: function() {
     return {
       ministeringAssignments: [],
+      yearbook: [],
     }
   },
   mounted () {
     this.ministeringAssignments = ministeringAssignments;
-    console.log(">>>this.ministeringAssignments", this.ministeringAssignments)
+    this.yearbook = yearbook;
   },
 }
 </script>

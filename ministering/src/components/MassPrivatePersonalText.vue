@@ -10,6 +10,8 @@
 
       <div>
         <textarea v-model="message" id="textMessage" name="textMessage" cols="30" rows="10"></textarea>
+        <div>Signature</div>
+        <textarea v-if="signature" v-model="signature" id="signature" name="signature" cols="30" rows="3"></textarea>
       </div>
 
       <div>
@@ -69,14 +71,26 @@ const cleanPhone = (phone) => {
   return (phone || '').replace(/\D/g, '')
 };
 
+const defaultSignature = `--- Pres. Vezzani`
+
+function updateTextBody() {
+  console.log(">>>trace 3")
+  if (this.entry.message.length === 0) {
+    this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\n${this.$parent.signature}`
+  }
+}
+
 function sendText() {
   const ans = confirm(`Are you sure you want to send text messages to ${this.namePhoneEntries.length} recipient(s)?`);
   // if (['yes', 'y', 'Y'].includes(ans)) {
+  const signature = this.signature || this.$parent.signature
+  const message = this.message.replace('${signature}', signature)
+  
   if (ans === true) {
     fetch('http://localhost:3000/send-text', {
       method: "POST",
       headers: {'content-type': 'application/json; charset=UTF-8'},
-      body: JSON.stringify({recipients: this.namePhoneEntries, message: this.message}),
+      body: JSON.stringify({recipients: this.namePhoneEntries, message}),
     })
     .then(data => data.json())
     .then(res => console.log(res))
@@ -101,17 +115,22 @@ Vue.component('TextMessageRecipient', {
   },
   methods: {
     sendText,
+    updateTextBody: function() {
+      if (this.entry.message.length === 0) {
+        this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\n${this.$parent.signature}`
+      }
+    }
   },
   mounted() {
-    this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\nCheers,\n--- Bro. Vezzani`
-    this.sendText = sendText.bind(this)
+    this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\n${this.$parent.signature}`
+    this.sendText = sendText.bind(this),
+    Event.$on('updateTextBody', this.updateTextBody)
   },
   watch: {
-    entry: function() {
-      if (this.entry.message.length === 0) {
-        this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\nCheers,\n--- Bro. Vezzani`
-      }
-    },
+    entry: {
+      deep: true,
+      handler() { this.updateTextBody() }
+    }
   },
 })
 
@@ -139,6 +158,7 @@ export default {
       asdf: false,
       message: null,
       selectedEntry: null,
+      signature: defaultSignature,
     }
   },
   methods: {
@@ -146,6 +166,12 @@ export default {
       this.selectedEntry = entry;
     },
     sendText,
+    updateTextBody: function() {
+      if (this.message.length === 0 && !(this.namePhoneEntries.length > 1 || this.selectedNames.length < 1)) {
+        const firstSelectedName = this.selectedNames[0].lastName
+        this.message = `Brother ${firstSelectedName},\n\nThis is a test.\n\n` + '${signature}'
+      }
+    },
   },
   mounted() {
     this.names = directoryNames.map((entry, index) => {
@@ -156,11 +182,15 @@ export default {
     })
 
     this.message = (this.namePhoneEntries.length > 1 || this.selectedNames.length < 1)
-      ? 'Brother ${name},\n\nThis is a test.\n\nCheers,\n--- Bro. Vezzani'
-      : `Brother ${this.selectedNames[0].lastName},\n\nThis is a test.\n\nCheers,\n--- Bro. Vezzani`
+      ? 'Brother ${name},\n\nThis is a test.\n\n${signature}'
+      : `Brother ${this.selectedNames[0].lastName},\n\nThis is a test.\n\n` + '${signature}'
 
     this.selectedEntry = this.selectedNames[0]
     this.sendText = sendText.bind(this)
+  },
+  watch: {
+    signature: function() { Event.$emit('updateTextBody') },
+    message: function() { this.updateTextBody() },
   },
 }
 </script>

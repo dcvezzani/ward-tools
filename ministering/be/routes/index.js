@@ -17,6 +17,19 @@ router.get('/sw-v1.js', function(req, res, next) {
 });
 
 const path = '/Users/dcvezzani/personal-projects/ward/ministering/be'
+const photosPath = '/Users/dcvezzani/personal-projects/ward/photos'
+
+// router.get('/photos/:personFile', function(req, res, next) {
+//   const data = fs.readFileSync(`${photosPath}/${req.params.personFile}`)
+//   const img = toBase64(data)
+
+//   res.writeHead(200, {
+//      'Content-Type': 'text/plain',
+//      'Content-Length': img.length
+//   });
+
+//   res.end(img); 
+// });
 
 router.get('/yearbook-photo-attributes', function(req, res, next) {
   const data = fs.readFileSync(`${path}/yearbook-photo-attributes.dat`)
