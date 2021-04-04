@@ -10,11 +10,11 @@ const highlightPhoto = (evt, {highlighted, actionType}) => {
   const dataId = evt.target.getAttribute("data-id")
   if (dataId) {
     if (highlighted) {
-      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted: true}})
+      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted: true, uuid: dataId}})
       window.candidatePhoto = evt.target
     }
     else {
-      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted}})
+      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted, uuid: dataId}})
       if (!highlighted) window.candidatePhoto = null
     }
   }
@@ -48,42 +48,42 @@ const selectPhoto = (evt, {selected, actionType}) => {
   window.targetPhoto = window.candidatePhoto
 }
 
-const resetPhoto = (evt) => {
+const resetPhoto = () => {
   const dataId = window.targetPhoto.getAttribute("data-id")
   Event.$emit(dataId, {action: 'resetPhoto'}) 
 }
 
-const zoomOut = (evt, {offset}) => {
+const zoomOut = ({offset}) => {
   if (!window.targetPhoto) return
   const defaultVal = window.targetPhoto.offsetWidth
   Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'photo-manipulation', type: 'zoomOut', data: {attribute: 'backgroundSize', offset, defaultVal, label: 'px'}})
 }
 
-const zoomIn = (evt, {offset}) => {
+const zoomIn = ({offset}) => {
   if (!window.targetPhoto) return
   const defaultVal = window.targetPhoto.offsetWidth
   Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'photo-manipulation', type: 'zoomIn', data: {attribute: 'backgroundSize', offset: (-1)*offset, defaultVal, label: 'px'}})
 }
 
-const scrollUp = (evt, {offset}) => {
+const scrollUp = ({offset}) => {
   if (!window.targetPhoto) return
   const defaultVal = 0
   Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'photo-manipulation', type: 'scrollUp', data: {attribute: 'backgroundPositionY', offset, defaultVal, label: 'px'}})
 }
 
-const scrollDown = (evt, {offset}) => {
+const scrollDown = ({offset}) => {
   if (!window.targetPhoto) return
   const defaultVal = 0
   Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'photo-manipulation', type: 'scrollDown', data: {attribute: 'backgroundPositionY', offset: (-1)*offset, defaultVal, label: 'px'}})
 }
 
-const scrollLeft = (evt, {offset}) => {
+const scrollLeft = ({offset}) => {
   if (!window.targetPhoto) return
   const defaultVal = 0
   Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'photo-manipulation', type: 'scrollLeft', data: {attribute: 'backgroundPositionX', offset, defaultVal, label: 'px'}})
 }
 
-const scrollRight = (evt, {offset}) => {
+const scrollRight = ({offset}) => {
   if (!window.targetPhoto) return
   const defaultVal = 0
   Event.$emit(window.targetPhoto.getAttribute("data-id"), {action: 'photo-manipulation', type: 'scrollRight', data: {attribute: 'backgroundPositionX', offset: (-1)*offset, defaultVal, label: 'px'}})
@@ -95,7 +95,7 @@ const getSize = (targetElement, defaultValue) => {
 
 export default {
   name: 'YearbookEntry',
-  props:['entry', 'photoModifications'],
+  props:['entry', 'photoModifications', 'isEditable'],
   data() {
     return {
       highlighted: false,
@@ -103,6 +103,9 @@ export default {
     }
   },
   computed: {
+    editable: function() {
+      return (this.isEditable === "true")
+    },
     photoMods: function() {
       return this.photoModifications
       //return (this.photoModifications)
@@ -125,21 +128,37 @@ export default {
       return val.replace(/\"/g, '')
     },
     toggleMode: function () {
+      if (!this.editable) return false
       this.photoModifications.active = (this.photoModifications.active != 'elderPhoto') ? 'elderPhoto' : 'familyPhoto'
     },
     highlightPhoto: function ({highlighted}) {
+      if (!this.editable) return false
       this.highlighted = highlighted
     },
     selectPhoto: function ({selected}) {
+      if (!this.editable) return false
       this.highlighted = false
       this.selected = selected
+      // window.selectedPhotoUuid = this.entry.uuid
     },
     resetPhoto: function () {
+      /* const photoModifications = this.photoModifications || {} */
+      /* this.photoModifications.backgroundPositionX = photoModifications.backgroundPositionX || 'center' */
+      /* this.photoModifications.backgroundPositionY = photoModifications.backgroundPositionY || 'center' */
+      /* this.photoModifications.backgroundSize = photoModifications.backgroundSize || 'cover' */
+      /* this.photoModifications.active = photoModifications.active || 'elderPhoto' */
+    
       this.photoModifications.backgroundPositionX = 'center'
       this.photoModifications.backgroundPositionY = 'center'
       this.photoModifications.backgroundSize = 'cover'
       this.photoModifications.active = 'elderPhoto'
     },
+    zoomIn,
+    zoomOut,
+    scrollUp,
+    scrollDown,
+    scrollLeft,
+    scrollRight,
   },
   mounted() {
     const self = this
@@ -154,6 +173,11 @@ export default {
         default:
           return self[payload.action](payload.data)
       }
+    });
+
+    Event.$on('selectPhotoHandler', function(payload){
+      const { evt, data } = payload
+      selectPhoto(evt, data)
     });
   },
   beforeDestroy() {

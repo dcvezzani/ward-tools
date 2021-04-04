@@ -12,7 +12,7 @@
     <div><button @click="savePhotoAttributes">save</button> | <button @click="loadPhotoAttributes">load</button></div>
 
     <div class="yearbook-entries">
-      <YearbookEntry v-if="photoModificationsLoaded && filteredYearbook" v-for="entry in filteredYearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]">
+      <YearbookEntry v-if="photoModificationsLoaded && filteredYearbook" v-for="entry in filteredYearbook" :key="entry.uuid" :entry="entry" :photoModifications="photoModifications[entry.uuid]" isEditable="true">
       </YearbookEntry>
     </div>
   </div>
@@ -40,7 +40,8 @@ export default {
         district03: {value: true, id: '03'},
         alloy: {value: false, id: 'alloy'},
         'sterling-loop': {value: false, id: 'sterling-loop'},
-      }
+      },
+      selectedUuid: null,
     }
   },
   computed: {
@@ -77,7 +78,9 @@ export default {
     },
   },
   async mounted() {
+    const self = this
     this.yearbook = yearbook
+    // window.selectedPhotoUuid = null
 
     const _photoModifications = yearbook.reduce((entries, entry) => {
       entries[entry.uuid] = {backgroundSize: 'cover', backgroundPositionX: 'center', backgroundPositionY: 'center', active: 'elderPhoto'}
@@ -97,18 +100,36 @@ export default {
         evt = evt || window.event;
         const offset = (evt.shiftKey && evt.ctrlKey) ? 500 : (evt.ctrlKey) ? 50 : (evt.shiftKey) ? 100 : 15
 
+        const photoUuid = (window.targetPhoto) ? window.targetPhoto.getAttribute('data-id') : null
+        console.log(">>>window.targetPhoto", window.targetPhoto, photoUuid)
+        // console.log(">>>window.selectedPhotoUuid", window.selectedPhotoUuid)
+
         // if (evt.ctrlKey && evt.keyCode == 90) {
         //     alert("Ctrl-Z");
         // }
-        if (false) {}
-        else if (evt.keyCode == 84) { selectPhoto(evt,  {actionType: 'key-code-t', selected: true}) }
-        else if (evt.keyCode == 82) { resetPhoto(evt,   {actionType: 'key-code-r'}) }
-        else if (evt.keyCode == 188) { zoomOut(evt,     {actionType: 'key-code-comma', offset}) }
-        else if (evt.keyCode == 190) { zoomIn(evt,      {actionType: 'key-code-period', offset}) }
-        else if (evt.keyCode == 87)  { scrollUp(evt,    {actionType: 'key-code-w', offset}) }
-        else if (evt.keyCode == 83)  { scrollDown(evt,  {actionType: 'key-code-s', offset}) }
-        else if (evt.keyCode == 65)  { scrollLeft(evt,  {actionType: 'key-code-a', offset}) }
-        else if (evt.keyCode == 68)  { scrollRight(evt, {actionType: 'key-code-d', offset}) }
+        // if (evt.keyCode == 84) { selectPhoto(evt,  {actionType: 'key-code-t', selected: true}) }
+        if (evt.keyCode == 84) Event.$emit('selectPhotoHandler', {evt, data: {actionType: 'key-code-t', selected: true}})
+        
+        /* if (evt.keyCode == 84) { */
+        /*   const photoUuid = (window.candidatePhoto) ? window.candidatePhoto.getAttribute('data-id') : null */
+        /*   if (photoUuid) Event.$emit(photoUuid, {action: 'selectPhoto', data: {actionType: 'key-code-t', selected: true}}) */
+        /* } */
+        // else if (evt.keyCode == 84) Event.$emit(dataId, {action: 'selectPhoto', ...{actionType: 'key-code-t', selected: true}})
+
+        else if (photoUuid) {
+          if (evt.keyCode == 82) Event.$emit(photoUuid, {action: 'resetPhoto', data: {actionType: 'key-code-r'}})
+
+          else if (evt.keyCode == 188) Event.$emit(photoUuid, {action: 'zoomOut', data: {actionType: 'key-code-comma', offset}})
+          else if (evt.keyCode == 190) Event.$emit(photoUuid, {action: 'zoomIn', data: {actionType: 'key-code-period', offset}})
+
+          else if (evt.keyCode == 87)  Event.$emit(photoUuid,    {action: 'scrollUp', data: {actionType: 'key-code-w', offset}})
+          else if (evt.keyCode == 83)  Event.$emit(photoUuid,  {action: 'scrollDown', data: {actionType: 'key-code-s', offset}})
+          else if (evt.keyCode == 65)  Event.$emit(photoUuid,  {action: 'scrollLeft', data: {actionType: 'key-code-a', offset}})
+          else if (evt.keyCode == 68)  Event.$emit(photoUuid, {action: 'scrollRight', data: {actionType: 'key-code-d', offset}})
+          else {
+            console.log(">>>evt.keyCode", evt.keyCode)
+          }
+        }
         else {
           console.log(">>>evt.keyCode", evt.keyCode)
         }
