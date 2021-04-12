@@ -142,7 +142,7 @@ const process = () => {
               // console.log(">>>companionship", companionship)
 
               let ministers = []
-              if (companionship.ministers.length > 1) {
+              if (companionship.ministers.length > 0) {
                 ministers = companionship.ministers.map(minister => {
                   const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
                   return {phone, email, address, name}

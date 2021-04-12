@@ -30,7 +30,8 @@ export default {
       return (this.photoModifications && Object.keys(this.photoModifications).length > 0)
     },
     entry: function() {
-      return this.yearbook.find(entry => entry.name === this.name.replace(/[^A-Za-z, ]/g, ''))
+      return this.yearbook.find(entry => entry.name === this.name.replace(/[^A-Za-z,á\. ]/g, ''))
+      
     }
   },
   methods: {
