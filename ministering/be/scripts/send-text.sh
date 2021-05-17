@@ -38,3 +38,7 @@ for line in $2; do
 
 done
 
+
+#   set targetService to 1st service whose service type = iMessage
+#   set targetService to 1st service whose service type = SMS
+
