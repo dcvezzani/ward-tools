@@ -57,8 +57,8 @@ cp directory.json directory-orig.json
 # if (. | test( "Dry Creek"; "i" )) then "02-dry-creek" 
 # if (. | test( "Dry Creek"; "i" )) then (if (. | split(" ")[0] | tonumber | if(. == 124 or . == 132 or . == 140) then ("03-dry-creek") else ("02-dry-creek") end)) 
 # if (. | test( "Dry Creek"; "i" )) then (if (. | split(" ")[0] | tonumber | if([.] | contains([124, 132, 140])) then ("03-dry-creek") else ("02-dry-creek") end)) 
-  
-cat directory-orig.json | jq 'def neighborhood: 
+
+jqNeighborhood='def neighborhood: 
 if (. | test( "Dry Creek"; "i" )) then (
   . | split(" ")[0] | tonumber | if(. == 124 or . == 132 or . == 140) then ("03-dry-creek") else ("02-dry-creek") end
 )
@@ -83,7 +83,9 @@ elif (. | test( "Unt M"; "i" )) then "01-alloy-m"
 elif (. | test( "Unt N"; "i" )) then "01-alloy-n" 
 elif (. | test( "Unt P"; "i" )) then "01-alloy-p" 
 elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" 
-else "01-other" end; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > directory.json
+else "01-other" end'
+
+cat directory-orig.json | jq ''"$jqNeighborhood"'; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > directory.json
 
 # cat directory.json | jq 'def neighborhood: if (. | test( "Dry Creek"; "i" )) then "03-dry-creek" elif (. | test( "Quivira"; "i" )) then "03-quivira" elif (. | test( "Hackberry"; "i" )) then "02-hackberry" elif (. | test( "Samara"; "i" )) then "02-samara" elif (. | test( "Serrata"; "i" )) then "02-serrata" elif (. | test( "Silver Oak"; "i" )) then "03-silver-oak" elif (. | test( "Sterling"; "i" )) then "01-sterling-loop" elif (. | test( "Syracuse"; "i" )) then "02-syracuse" elif (. | test( "Drupe"; "i" )) then "02-drupe" elif (. | test( "Unity M"; "i" )) then "01-alloy-m" elif (. | test( "Unity N"; "i" )) then "01-alloy-n" elif (. | test( "Unity P"; "i" )) then "01-alloy-p" elif (. | test( "Unity Q"; "i" )) then "01-alloy-q" elif (. | test( "Unit M"; "i" )) then "01-alloy-m" elif (. | test( "Unit N"; "i" )) then "01-alloy-n" elif (. | test( "Unit P"; "i" )) then "01-alloy-p" elif (. | test( "Unit Q"; "i" )) then "01-alloy-q" elif (. | test( "Apt M"; "i" )) then "01-alloy-m" elif (. | test( "Apt N"; "i" )) then "01-alloy-n" elif (. | test( "Apt P"; "i" )) then "01-alloy-p" elif (. | test( "Apt Q"; "i" )) then "01-alloy-q" elif (. | test( "Unt M"; "i" )) then "01-alloy-m" elif (. | test( "Unt N"; "i" )) then "01-alloy-n" elif (. | test( "Unt P"; "i" )) then "01-alloy-p" elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" else "n/a" end; reduce .[] as $entry ([]; . + (($entry.address | neighborhood) as $district | $entry.members | map({uuid, name, phone, email, address: $entry.address, $district, members: $entry.members})))'
 
@@ -96,7 +98,9 @@ curl 'https://lcr.churchofjesuschrist.org/services/orgs/sub-orgs-with-callings?l
 
 sleep 2
 
-cat eq.json | jq '.[0] as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, gender, birthDate, birthDayFormatted, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })' > eq-cleaned.json
+eqWip=$(cat eq.json | jq '.[0] as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, id, gender, birthDate, birthDayFormatted, address, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })')
+
+echo "$eqWip" | jq ''"$jqNeighborhood"'; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > eq-cleaned.json
 
 echo "fetching members with callings"
 
