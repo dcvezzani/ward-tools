@@ -1,6 +1,6 @@
 <template>
   <div class="yearbook-entry">
-      <div :data-id="entry.uuid" @mouseover="onmouseoverHandler" @mousedown="onmousedownHandler" @mouseout="onmouseoutHandler" @click="toggleMode" :class="classNames" :style="modeStyle"><span class="label"><span class="text truncate">{{ entry.name }}</span></span></div>
+      <div :data-id="entry.id" @mouseover="onmouseoverHandler" @mousedown="onmousedownHandler" @mouseout="onmouseoutHandler" @click="toggleMode" :class="classNames" :style="modeStyle"><span class="label"><span class="text truncate">{{ entry.name }}</span></span></div>
   </div>
 </template>
 
@@ -10,11 +10,11 @@ const highlightPhoto = (evt, {highlighted, actionType}) => {
   const dataId = evt.target.getAttribute("data-id")
   if (dataId) {
     if (highlighted) {
-      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted: true, uuid: dataId}})
+      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted: true, id: dataId}})
       window.candidatePhoto = evt.target
     }
     else {
-      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted, uuid: dataId}})
+      Event.$emit(dataId, {action: 'highlightPhoto', type: actionType, data: {highlighted, id: dataId}})
       if (!highlighted) window.candidatePhoto = null
     }
   }
@@ -139,7 +139,7 @@ export default {
       if (!this.editable) return false
       this.highlighted = false
       this.selected = selected
-      // window.selectedPhotoUuid = this.entry.uuid
+      // window.selectedPhotoUuid = this.entry.id
     },
     resetPhoto: function () {
       /* const photoModifications = this.photoModifications || {} */
@@ -162,8 +162,8 @@ export default {
   },
   mounted() {
     const self = this
-    Event.$on(this.entry.uuid, function(payload){
-      // console.log(`>>>payload from ${self.entry.uuid}`, payload)
+    Event.$on(this.entry.id, function(payload){
+      // console.log(`>>>payload from ${self.entry.id}`, payload)
       switch(payload.action) {
         case 'photo-manipulation':
           const {attribute, offset, defaultVal, label} = payload.data
