@@ -4,6 +4,12 @@ message=$(echo "$1" | base64 --decode)
 for line in $2; do
   name="${line##*,}"
   phone="${line%%,*}"
+
+  if [ "$phone" == "" ]; then
+    echo "Recipient (${name}) is missing a phone number.  Skipping to next recipient."
+    continue
+  fi 
+
   echo "Sending ${phone} > ${name}..."
 
   # MSG=$(echo "${message}" | perl -p -e 's#\${name}#'"$name"'#g')

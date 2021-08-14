@@ -6,6 +6,13 @@
     </autocomplete>
 
     <div>{{hoverNameIdx}}</div>
+    <button @click="addAllNames">Add All Contactable</button>
+    <button @click="addAllEqNames">Add All EQ</button>
+    <button @click="addAllRsNames">Add All RS</button>
+    <button @click="addAllEqRsNames">Add All Adults</button>
+    <button @click="addAllYmNames">Add All YM</button>
+    <button @click="addAllYwNames">Add All YW</button>
+    <button @click="addAllYmYwNames">Add All Youth</button>
 
     <div class="supportedSortOptions-label">Sort Options:</div>
     <input v-model="sortOptionsInput" type="text" placeholder="name" @focus="inputting=true" @blur="inputting=false"><span class="supportedSortOptions">({{supportedSortOptions.join(",")}})</span>
@@ -50,6 +57,11 @@
 <script>
 import Vue from 'vue'
 import directoryNames from '../../../directory-contact-info.json'
+import eqNames from '../../../eq-cleaned.json'
+import rsNames from '../../../rs-cleaned.json'
+import ymNames from '../../../ym-cleaned.json'
+import ywNames from '../../../yw-cleaned.json'
+import doNotContact from '../../../do-not-contact.json'
 import Autocomplete from 'vuejs-auto-complete'
 
 Vue.component('PersonContactInfo', {
@@ -167,6 +179,49 @@ export default {
   methods: {
     removeName: function(id){
       this.selectedNameIds = this.selectedNameIds.filter(entryId => entryId != id)
+    },
+    addAllNames: function(){
+      const _eqNames = eqNames.map(entry => entry.name)
+      const _rsNames = rsNames.map(entry => entry.name)
+      const _ymNames = ymNames.map(entry => entry.name)
+      const _ywNames = ywNames.map(entry => entry.name)
+      const _allNames = _eqNames.concat(_rsNames).concat(_ymNames).concat(_ywNames)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (_allNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
+    },
+    addAllEqNames: function(){
+      const _eqNames = eqNames.map(entry => entry.name)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (_eqNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
+    },
+    addAllRsNames: function(){
+      const _rsNames = rsNames.map(entry => entry.name)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (_rsNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
+    },
+    addAllEqRsNames: function(){
+      const _eqNames = eqNames.map(entry => entry.name)
+      const _rsNames = rsNames.map(entry => entry.name)
+      const adultNames = _eqNames.concat(_rsNames)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (adultNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
+    },
+    addAllYmNames: function(){
+      const _ymNames = ymNames.map(entry => entry.name)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (_ymNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
+    },
+    addAllYwNames: function(){
+      const _ywNames = ywNames.map(entry => entry.name)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (_ywNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
+    },
+    addAllYmYwNames: function(){
+      const _ymNames = ymNames.map(entry => entry.name)
+      const _ywNames = ywNames.map(entry => entry.name)
+      const youthNames = _ymNames.concat(_ywNames)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (youthNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
     },
     sendTextMessage: function(){
       // console.log(">>>this.selectedNameIds", this.selectedNameIds.length, this.hoverNameIdx)

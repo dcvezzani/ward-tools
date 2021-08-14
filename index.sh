@@ -119,6 +119,12 @@ curl 'https://lcr.churchofjesuschrist.org/services/orgs/sub-orgs-with-callings?l
 
 sleep 2
 
+rsWip=$(cat rs.json | jq '.[0] as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, id, gender, birthDate, birthDayFormatted, address, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })')
+
+echo "$rsWip" | jq ''"$jqNeighborhood"'; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > rs-cleaned.json
+
+echo "filtering for single sisters"
+
 # filter directory for households that only have one .head == true (this may include brothers, but they will be filtered out later on) > $singleMembers
 # pull all sisters from RS and inner join with $singleMembers
 # lookup callings for $targetMember
@@ -134,6 +140,52 @@ curl 'https://lcr.churchofjesuschrist.org/services/orgs/sub-orgs-with-callings?l
 sleep 2
 
 cat ym.json | jq '.[0].children | map(select(((.filterOffices | length) > 0))) | map(. as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, gender, birthDate, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })) | reduce .[] as $quorum ([]; . + $quorum) | map(select(.eligibleForHomeTeachingAssignment == true))' > ym-cleaned.json
+
+echo "fetching yw"
+
+curl 'https://lcr.churchofjesuschrist.org/services/orgs/sub-orgs-with-callings?ip=true&lang=eng&subOrgId=209083&unitNumber=13730' \
+  -H 'Connection: keep-alive' \
+  -H 'Pragma: no-cache' \
+  -H 'Cache-Control: no-cache' \
+  -H 'sec-ch-ua: "Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'Sec-Fetch-Mode: cors' \
+  -H 'Sec-Fetch-Dest: empty' \
+  -H 'Referer: https://lcr.churchofjesuschrist.org/orgs/209083?unitNumber=13730&lang=eng' \
+  -H 'Accept-Language: en-US' \
+  -H 'Cookie: cr-aths=shown; at_check=true; AMCVS_66C5485451E56AAE0A490D45%40AdobeOrg=1; s_ips=1333; s_cc=true; PFpreferredHomepage=COJC; ORIG_URL=/sso?realm=/church&service=OktaOIDC&goto=https://www.churchofjesuschrist.org/services/platform/v3/set-wam-cookie&authIndexType=service&authIndexValue=OktaOIDC; OAUTH_LOGOUT_URL=null; s_fid=7B5F17761279C3B3-1D97835CD233A4D2; notice_behavior=implied|us; AMCV_66C5485451E56AAE0A490D45%40AdobeOrg=-1124106680%7CMCIDTS%7C18853%7CMCMID%7C40667282663157899593710534620564257125%7CMCAAMLH-1629552863%7C9%7CMCAAMB-1629552863%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1628955263s%7CNONE%7CvVersion%7C5.2.0%7CMCAID%7CNONE; amlbcookie-prod=01; NTID=RZRJcz8Zj3EVLtlgM75bLImY0zqKBDgv; JSESSIONID=0; __VCAP_ID__=04be1c00-4627-49ee-70c9-4b98; sat_track=true; notice_behavior=implied|us; RT="z=1&dm=churchofjesuschrist.org&si=ce0ed987-a46d-45ed-a00a-5ae6faa8da11&ss=ksao0uhg&sl=0&tt=0&bcn=%2F%2F173e2547.akstat.io%2F"; agent-authn-tx=eAENjEEKgzAQAP+y5yxkTbKagD/oD0oP0V3wkFbRSAvi35vbDAzzvOCouSokiCFPQspIlnucos0ozge0wj25MHeDZTBw7qXFj+84NnlrXVbBeZV2IAOLZtH9gHTdBjbZIH3OUgzoryFxN8TgvKf79Qf5JCI7; ChurchSSO='"${ChurchSSO}"'; Church-auth-jwt-prod='"${ChurchAuthJwtProd}"'; gpv_Page=organization; s_tp=1333; mbox=PC#eda1224126154de99f0be65c0381779e.35_0#1692197873|session#d0a66df0cf1d4baea00e023210f6eee4#1628954124; s_plt=1.82; s_pltp=organization; s_ppv=organization%2C100%2C100%2C1333%2C1%2C1; gpv_cURL=lcr.churchofjesuschrist.org%2Forgs%2F209083; s_sq=%5B%5BB%5D%5D' \
+  --compressed > yw.json
+
+sleep 2
+
+# {"name":"Macy, Jenna","spokenName":"Jenna Macy","nameOrder":null,"birthDate":"20060919","birthDateSort":"20060919","birthDaySort":"09-19","birthDayFormatted":"19 Sep","birthDateFormatted":"19 Sep 2006","gender":"FEMALE","genderCode":2,"mrn":null,"id":19080036881,"email":"macyjenna20@gmail.com","householdEmail":"cmacy001@yahoo.com","phone":"+1 (385) 335-7300","householdPhone":"8015410092","unitNumber":13730,"unitName":"Vineyard  1st Ward","priesthood":null,"priesthoodCode":null,"priesthoodType":null,"age":14,"actualAge":14,"actualAgeInMonths":178,"genderLabelShort":"F","visible":null,"nonMember":false,"outOfUnitMember":false,"notAccountable":false,"address":"205 S. Dry Creek Lane<br />Vineyard, Utah 84058","endowed":null,"sealedToSpouse":null,"defaultClass":true,"defaultClassTypeId":3082,"adultAgeOrMarried":false,"htvtCompanions":null,"htvtAssignments":null,"eligibleForHomeTeachingAssignment":false,"sustainedDate":null,"accountable":true,"formattedMrn":null,"setApart":false}
+
+#   {
+#     "name": "Claybaugh, Carter",
+#     "gender": "MALE",
+#     "birthDate": "20040413",
+#     "priesthood": "PRIEST",
+#     "actualAge": 17,
+#     "nonMember": false,
+#     "endowed": null,
+#     "eligibleForHomeTeachingAssignment": true
+#   },
+
+#   {
+#     "name": "Macy, Jenna",
+#     "gender": "FEMALE",
+#     "birthDate": "20060919",
+#     "class": "YOUNG_WOMEN_18",
+#     "actualAge": 14,
+#     "nonMember": false,
+#     "endowed": null,
+#     "eligibleForHomeTeachingAssignment": false
+#   },
+
+cat yw.json | jq '.[0].children | map(select(.classGroup != null)) | map(. as $head | $head.members | map({ name, gender, birthDate, priesthood: null, class: $head.firstOrgType, actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })) | reduce .[] as $class ([]; . + $class)' > yw-cleaned.json
 
 echo "fetching ministering assignments"
 
