@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "DEBUG=be:* ./node_modules/.bin/nodemon bin/www --exec ./node_modules/.bin/babel-node --presets @babel/preset-env",
+    "dev": "NODE_ENV=local DEBUG=be:* ./node_modules/.bin/nodemon bin/www --exec ./node_modules/.bin/babel-node --presets @babel/preset-env",
+    "worker": "NODE_ENV=local ./node_modules/.bin/babel-node --presets @babel/preset-env workers/queue.js",
     "start": "node ./bin/www"
   },
   "dependencies": {
@@ -13,7 +14,10 @@
     "express": "~4.16.0",
     "googleapis": "39",
     "http-errors": "~1.6.2",
-    "morgan": "~1.9.0"
+    "knex": "^0.95.11",
+    "morgan": "~1.9.0",
+    "sqlite3": "^5.0.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.0",

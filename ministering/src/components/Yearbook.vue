@@ -7,6 +7,7 @@
       <input type="checkbox" id="district-03" v-model="filters.district03.value" /> <label for="district-03">District 3</label>
       <input type="checkbox" id="alloy" v-model="filters.alloy.value" /> <label for="alloy">Alloy</label>
       <input type="checkbox" id="sterling-loop" v-model="filters['sterling-loop'].value" /> <label for="sterling-loop">Sterling Loop</label>
+      <input type="checkbox" id="district-unassigned" v-model="filters.unassigned.value" /> <label for="district-unassigned">Unassigned</label>
     </div>
 
     <div><button @click="savePhotoAttributes">save</button> | <button @click="loadPhotoAttributes">load</button></div>
@@ -40,6 +41,7 @@ export default {
         district03: {value: true, id: '03'},
         alloy: {value: false, id: 'alloy'},
         'sterling-loop': {value: false, id: 'sterling-loop'},
+        unassigned: {value: false, id: 'unassigned'},
       },
       selectedUuid: null,
     }

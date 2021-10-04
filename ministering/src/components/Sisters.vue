@@ -11,6 +11,7 @@
         <li><a href="#d1">District 1 ({{leaders[0]}})</a></li>
         <li><a href="#d2">District 2 ({{leaders[1]}})</a></li>
         <li><a href="#d3">District 3 ({{leaders[2]}})</a></li>
+        <li><a href="#d4">Unassigned ({{leaders[0]}})</a></li>
       </ul>
     
       <h3><a name="d1">District 1 ({{leaders[0]}})</a></h3><br>
@@ -27,6 +28,12 @@
 
       <h3><a name="d3">District 3 ({{leaders[2]}})</a></h3><br>
       <div v-for="sister in sisters_d3" :key="sister.idx" class="sister">
+        <Person :person="sister" :show-positions="true"></Person>
+        <br/>
+      </div>
+
+      <h3><a name="d4">Unassigned ({{leaders[0]}})</a></h3><br>
+      <div v-for="sister in sisters_unassigned" :key="sister.idx" class="sister">
         <Person :person="sister" :show-positions="true"></Person>
         <br/>
       </div>
@@ -70,9 +77,10 @@ export default {
   mounted() {
     this.sisters = singleSisters.map(e => ({...e, idx: uuidv4()})).sort(sort_by_name)
 
-    this.sisters_d1 = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^01')).sort(sort_by_name)
-    this.sisters_d2 = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^02')).sort(sort_by_name)
-    this.sisters_d3 = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^03')).sort(sort_by_name)
+    this.sisters_d1 = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-01')).sort(sort_by_name)
+    this.sisters_d2 = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-02')).sort(sort_by_name)
+    this.sisters_d3 = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-03')).sort(sort_by_name)
+    this.sisters_unassigned = this.sisters.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-unassigned')).sort(sort_by_name)
   },
 }
 </script>

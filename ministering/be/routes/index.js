@@ -5,7 +5,10 @@ import fs from 'fs';
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const { spawn } = require( 'child_process' );
-
+import db from '../db'
+import { v4 as uuidv4 } from 'uuid';
+var cors = require('cors')
+const worker = require('../workers/queue')
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -82,24 +85,88 @@ const toBase64 = (str) => {
   return Buffer.from(str).toString('base64');
 };
 
-async function sendText({recipients, message}) {
-  return new Promise((resolve, reject) => {
-    const cmd = spawn( './scripts/send-text.sh', [ toBase64(message), `${recipients}` ] );
-    const data = {}
+// async function sendText({recipients, message}) {
+//   console.log(">>>recipients", recipients)
+//   return new Promise((resolve, reject) => {
+//     const cmd = spawn( './scripts/send-text.sh', [ toBase64(message), `${recipients}` ] );
+//     const data = {}
 
-    cmd.stdout.on( 'data', _data => data.stdout = `${_data}` );
-    cmd.stderr.on( 'data', _data => data.stderr = `${_data}` );
-    cmd.on( 'close', code => resolve({ code, data }) );
+//     cmd.stdout.on( 'data', _data => data.stdout = `${_data}` );
+//     cmd.stderr.on( 'data', _data => data.stderr = `${_data}` );
+//     cmd.on( 'close', code => {
+//       console.log(">>>data", data)
+//       return resolve({ code, data })
+//     });
+//   })
+// }
+
+// router.post('/send-text-v01', async function(req, res, next) {
+//   console.log(">>>req", req.body)
+
+//   // const cmdRes = await ls();
+//   // const cmdRes = {}
+//   const cmdRes = await sendText({recipients: req.body.recipients.map(entry => `${entry}`).join(' '), message: req.body.message});
+//   res.json({ message: 'done', ...cmdRes });
+// });
+
+router.get('/get-next-in-queue', cors(), async function(req, res, next) {
+  const responsePayload = await db.getUnprocessedJobsFor('text-message')
+  .then(payload => {
+    return Promise.resolve({ message: 'done', count: payload.length, payload })
   })
-}
+  .catch(err => {
+    return Promise.resolve({ message: `Unable to get unprocessed jobs for text-message type`, error: err })
+  })
 
-router.post('/send-text', async function(req, res, next) {
+  res.json(responsePayload);
+});
+
+// router.options('/send-text', cors())
+router.post('/send-text', cors(), async function(req, res, next) {
+  const {jobGroupId} = req.query
+  const responsePayload = await worker.processTextMessageJobs(jobGroupId)
+  .then(payload => {
+    return Promise.resolve({ status: 200, message: 'done', payload })
+  })
+  .catch(err => {
+    console.error(`Unable to process text message jobs; ${JSON.stringify(err)}`)
+    return Promise.resolve({ status: 500, message: 'done', err })
+  })
+  res.status(responsePayload.status).json(responsePayload);
+});
+
+// router.options('/queue-text', cors())
+router.post('/queue-text', cors(), async function(req, res, next) {
   console.log(">>>req", req.body)
 
+  await db.clearTextMessagesFromQueue('text-message')
+  
+  const jobGroupId = uuidv4()
+  const textMessageJobs = req.body.recipients.map(entry => {
+    return {
+      type: 'text-message',
+      jobGroupId,
+      payload: JSON.stringify({message: req.body.message, ...entry}), // , phone: '2097569688'
+    }
+  })
+
+  let responseStatus
+  const dbRes = await db.addTextMessagesToQueue(textMessageJobs)
+  // .then(payload => {
+  //   return Promise.reject(new Error("xxx"))
+  //   return Promise.resolve(payload)
+  // })
+  .catch(err => {
+    const message = `Unable to add text messages to queue: ${JSON.stringify({message: err.message, stack: err.stack})}`
+    console.error(`${message}; ${JSON.stringify(textMessageJobs)}`)
+    responseStatus = 500
+    return { error: message }
+  })
   // const cmdRes = await ls();
   // const cmdRes = {}
-  const cmdRes = await sendText({recipients: req.body.recipients.join(' '), message: req.body.message});
-  res.json({ message: 'done', ...cmdRes });
+  // const cmdRes = await sendText({recipients: req.body.recipients.map(entry => `${entry}`).join(' '), message: req.body.message});
+
+  res.status(responseStatus || 200).json({ message: 'done', ...dbRes });
 });
 
 

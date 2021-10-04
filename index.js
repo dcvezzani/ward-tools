@@ -13,6 +13,9 @@ const data = {
   ministering_families: {}, 
 }
 
+const doNotContact = JSON.parse(fs.readFileSync('./do-not-contact.json').toString()).filter(entry => Object.keys(entry).length > 0)
+const doNotContactNames = doNotContact.map(entry => entry.name)
+
 const process = () => {
   return new Promise((resolve, reject) => {
     async.series({
@@ -28,16 +31,16 @@ const process = () => {
       reduceDirectory: (cb) => {
         data.directory = data.directory.reduce((coll, entry) => {
           // if (entry.name.match(/Vezzani/)) console.log(">>>entry", entry)
-          const {name, phone, email, address, district} = entry
+          const {name, phone, email, address, district, neighborhood} = entry
           const members = entry.members.map(member => {
             const {name, sex, birthDate} = member
             return {name, sex, birthDate}
           })
-          coll[entry.name] = { name, phone, email, address, district, members }
+          coll[entry.name] = { name, phone, email, address, district, neighborhood, members }
 
           entry.members.forEach(fmember => {
           // console.log(">>>fmember", fmember)
-            coll[fmember.name] = { phone, email, address, ...fmember, district }
+            coll[fmember.name] = { phone, email, address, ...fmember, district, neighborhood }
           })
           return coll
         }, {})
@@ -50,12 +53,12 @@ const process = () => {
         // console.log(">>>trace 2", data.directory)
         fs.readFile('./eq-cleaned.json', (err, content) => {
           if (err) return cb(err)
-          data.eq = JSON.parse(content).map(entry => {
+          data.eq = JSON.parse(content).filter(entry => !doNotContactNames.includes(entry.name)).map(entry => {
             // console.log(">>>entry", entry.name)
             const directoryEntry = data.directory[entry.name]
             // console.log(">>>directoryEntry", directoryEntry)
-            const {uuid, givenName, surname, phone, email, address, district} = directoryEntry;
-            return {...entry, uuid, givenName, surname, phone, email, address, district}
+            const {uuid, givenName, surname, phone, email, address, district, neighborhood} = directoryEntry;
+            return {...entry, uuid, givenName, surname, phone, email, address, district, neighborhood}
           })
           // console.log(">>>data.eq", data.eq)
           data.available_brothers = JSON.parse(JSON.stringify(data.eq))
@@ -65,43 +68,43 @@ const process = () => {
       ym: (cb) => {
         fs.readFile('./ym-cleaned.json', (err, content) => {
           if (err) return cb(err)
-          data.ym = JSON.parse(content).map(entry => {
+          data.ym = JSON.parse(content).filter(entry => !doNotContactNames.includes(entry.name)).map(entry => {
             const directoryEntry = data.directory[entry.name]
-            const {uuid, givenName, surname, phone, email, address, district} = directoryEntry;
-            return {...entry, uuid, givenName, surname, phone, email, address, district}
+            const {uuid, givenName, surname, phone, email, address, district, neighborhood} = directoryEntry;
+            return {...entry, uuid, givenName, surname, phone, email, address, district, neighborhood}
           })
           // console.log(">>>data.ym", data.ym)
           data.available_brothers = [...data.available_brothers, ...(JSON.parse(JSON.stringify(data.ym)))]
           cb()
         });
       },
-      ignore_members: (cb) => {
-        fs.readFile('./ignore.json', (err, content) => {
-          if (err) return cb(err)
-          data.ignore = JSON.parse(content);
-          data.ignore_names = data.ignore.map(brother => brother.name)
-          // console.log(">>>data.ignore_names", JSON.stringify(data.ignore_names, null, 2))
-          data.ignore_families = data.ignore.map(family => family.uuid)
-          // console.log(">>>data.ignore_families", JSON.stringify(data.ignore_families, null, 2))
+      // ignore_members: (cb) => {
+      //   fs.readFile('./ignore.json', (err, content) => {
+      //     if (err) return cb(err)
+      //     data.ignore = JSON.parse(content);
+      //     data.ignore_names = data.ignore.map(brother => brother.name)
+      //     // console.log(">>>data.ignore_names", JSON.stringify(data.ignore_names, null, 2))
+      //     data.ignore_families = data.ignore.map(family => family.uuid)
+      //     // console.log(">>>data.ignore_families", JSON.stringify(data.ignore_families, null, 2))
 
-          // remove ignored ministering brothers
-          data.available_brothers = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
+      //     // remove ignored ministering brothers
+      //     data.available_brothers = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
           
-          // remove ignored families
-          data.available_families = data.available_families.filter(family => {
-            // if (family.uuid === '224f6b10-9880-4bfc-8cf0-79d725315d0c')
-            // console.log(">>>family.uuid", family.uuid)
+      //     // remove ignored families
+      //     data.available_families = data.available_families.filter(family => {
+      //       // if (family.uuid === '224f6b10-9880-4bfc-8cf0-79d725315d0c')
+      //       // console.log(">>>family.uuid", family.uuid)
 
-            return family.members.reduce((res, member) => {
-              res = (!data.ignore_families.includes(member.uuid) && res)
-              return res
-            }, true)
-          })
-          cb()
-        });
-      },
+      //       return family.members.reduce((res, member) => {
+      //         res = (!data.ignore_families.includes(member.uuid) && res)
+      //         return res
+      //       }, true)
+      //     })
+      //     cb()
+      //   });
+      // },
       available_eq: (cb) => {
-        const filtered_eq = data.available_brothers.filter(brother => !data.ignore_names.includes(brother.name))
+        const filtered_eq = data.available_brothers //.filter(brother => !data.ignore_names.includes(brother.name))
         data.available_brothers = filtered_eq
         fs.writeFile('available_eq.json', JSON.stringify(filtered_eq), (err) => {
           if (err) return cb(err)
@@ -134,7 +137,7 @@ const process = () => {
             if (!supervisorName) return { districtName, supervisor: {}, companionships: [] }
             const {phone, email, address, name} = data.directory[supervisorName]
 
-            const companionships = (district.companionships || []).map(companionship => {
+            const companionships = (district.companionships || []).map((companionship, companionshipId) => {
               // const ministers = companionship.ministers.map(minister => {
               //   const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
               //   return {phone, email, address, name}
@@ -145,7 +148,7 @@ const process = () => {
               if (companionship.ministers.length > 0) {
                 ministers = companionship.ministers.map(minister => {
                   const {phone, email, address, name} = {phone: '', email: '', address: '', ...data.directory[minister.name]}
-                  return {phone, email, address, name}
+                  return {phone, email, address, name, companionshipId: (companionshipId+1)}
                 })
               } else {
                 // console.log(">>>companionship.ministers", companionship.ministers)
@@ -197,21 +200,22 @@ const process = () => {
       unassigned_brothers: (cb) => {
         // console.log(">>>data.available_brothers", data.available_brothers);
         const available_brothers_names = data.available_brothers.map(brother => brother.name)
-        console.log(">>>available_brothers_names", available_brothers_names.find(name => name.startsWith('Ash')));
+        console.log(">>>available_brothers_names", available_brothers_names.length);
         const assigned_brothers_names = data.assigned_brothers.map(brother => brother.name)
-        console.log(">>>assigned_brothers_names", assigned_brothers_names.find(name => name.startsWith('Ash')));
+        console.log(">>>assigned_brothers_names", assigned_brothers_names.length);
 
         const unassigned_brothers_names = available_brothers_names.filter(brother => !assigned_brothers_names.includes(brother))
-        console.log(">>>unassigned_brothers_names", unassigned_brothers_names.find(name => name.startsWith('Ash')));
+        console.log(">>>unassigned_brothers_names", unassigned_brothers_names.length);
 
-        data.unassigned_brothers = data.available_brothers.filter(brother => unassigned_brothers_names.includes(brother.name))
-        console.log(">>>data.unassigned_brothers", data.unassigned_brothers.find(brother => brother.name.startsWith('Ash')));
+        console.log(">>>doNotContactNames", doNotContactNames)
+        data.unassigned_brothers = data.available_brothers.filter(entry => !doNotContactNames.includes(entry.name)).filter(brother => unassigned_brothers_names.includes(brother.name))
+        console.log(">>>data.unassigned_brothers", data.unassigned_brothers.length);
 
         cb()
       },
       unassigned_families: (cb) => {
         // console.log(">>>data.available_families", data.available_families);
-        const available_families_names = data.available_families.map(family => family.name)
+        const available_families_names = data.available_families.filter(entry => !doNotContactNames.includes(entry.name)).map(family => family.name)
         const assigned_families_names = data.assigned_families.map(family => family.name)
         const unassigned_families_names = available_families_names.filter(family => !assigned_families_names.includes(family))
         // console.log(">>>unassigned_families_names", unassigned_families_names);

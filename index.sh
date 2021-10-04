@@ -59,37 +59,58 @@ cp directory.json directory-orig.json
 # if (. | test( "Dry Creek"; "i" )) then (if (. | split(" ")[0] | tonumber | if([.] | contains([124, 132, 140])) then ("03-dry-creek") else ("02-dry-creek") end)) 
 
 jqNeighborhood='def neighborhood: 
-if (. | test( "Dry Creek"; "i" )) then (
-  . | split(" ")[0] | tonumber | if(. == 124 or . == 132 or . == 140) then ("03-dry-creek") else ("02-dry-creek") end
-)
-elif (. | test( "Quivira"; "i" )) then "02-quivira" 
-elif (. | test( "Silver Oak"; "i" )) then (
-  . | split(" ")[0] | tonumber | if(. < 112) then ("03-silver-oak") else ("02-silver-oak") end
-)
-elif (. | test( "Sterling"; "i" )) then "03-sterling-loop" 
-elif (. | test( "Unity M"; "i" )) then "01-alloy-m" 
-elif (. | test( "Unity N"; "i" )) then "01-alloy-n" 
-elif (. | test( "Unity P"; "i" )) then "01-alloy-p" 
-elif (. | test( "Unity Q"; "i" )) then "01-alloy-q" 
-elif (. | test( "Unit M"; "i" )) then "01-alloy-m" 
-elif (. | test( "Unit N"; "i" )) then "01-alloy-n" 
-elif (. | test( "Unit P"; "i" )) then "01-alloy-p" 
-elif (. | test( "Unit Q"; "i" )) then "01-alloy-q" 
-elif (. | test( "Apt M"; "i" )) then "01-alloy-m" 
-elif (. | test( "Apt N"; "i" )) then "01-alloy-n" 
-elif (. | test( "Apt P"; "i" )) then "01-alloy-p" 
-elif (. | test( "Apt Q"; "i" )) then "01-alloy-q" 
-elif (. | test( "Unt M"; "i" )) then "01-alloy-m" 
-elif (. | test( "Unt N"; "i" )) then "01-alloy-n" 
-elif (. | test( "Unt P"; "i" )) then "01-alloy-p" 
-elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" 
-else "01-other" end'
+if (. | test( "Dry Creek"; "i" )) then "dry-creek" 
+elif (. | test( "Quivira"; "i" )) then "quivira" 
+elif (. | test( "Silver Oak"; "i" )) then "silver-oak" 
+elif (. | test( "Sterling"; "i" )) then "sterling-loop" 
+elif (. | test( "Unity M"; "i" )) then "alloy-m" 
+elif (. | test( "Unity N"; "i" )) then "alloy-n" 
+elif (. | test( "Unity P"; "i" )) then "alloy-p" 
+elif (. | test( "Unity Q"; "i" )) then "alloy-q" 
+elif (. | test( "Unit M"; "i" )) then "alloy-m" 
+elif (. | test( "Unit N"; "i" )) then "alloy-n" 
+elif (. | test( "Unit P"; "i" )) then "alloy-p" 
+elif (. | test( "Unit Q"; "i" )) then "alloy-q" 
+elif (. | test( "Apt M"; "i" )) then "alloy-m" 
+elif (. | test( "Apt N"; "i" )) then "alloy-n" 
+elif (. | test( "Apt P"; "i" )) then "alloy-p" 
+elif (. | test( "Apt Q"; "i" )) then "alloy-q" 
+elif (. | test( "Unt M"; "i" )) then "alloy-m" 
+elif (. | test( "Unt N"; "i" )) then "alloy-n" 
+elif (. | test( "Unt P"; "i" )) then "alloy-p" 
+elif (. | test( "Unt Q"; "i" )) then "alloy-q" 
+else "z-not-available" end'
 
-cat directory-orig.json | jq ''"$jqNeighborhood"'; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > directory.json
+jqDistrict='def district: 
+if (. | test( "Dry Creek"; "i" )) then "district-02" 
+elif (. | test( "Quivira"; "i" )) then "district-02" 
+elif (. | test( "Silver Oak"; "i" )) then (
+  . | split(" ")[0] | tonumber | if(. <= 49) then ("district-03") else ("district-02") end
+)
+elif (. | test( "Sterling"; "i" )) then "district-03" 
+elif (. | test( "Unity M"; "i" )) then "district-01" 
+elif (. | test( "Unity N"; "i" )) then "district-01" 
+elif (. | test( "Unity P"; "i" )) then "district-01" 
+elif (. | test( "Unity Q"; "i" )) then "district-01" 
+elif (. | test( "Unit M"; "i" )) then "district-01" 
+elif (. | test( "Unit N"; "i" )) then "district-01" 
+elif (. | test( "Unit P"; "i" )) then "district-01" 
+elif (. | test( "Unit Q"; "i" )) then "district-01" 
+elif (. | test( "Apt M"; "i" )) then "district-01" 
+elif (. | test( "Apt N"; "i" )) then "district-01" 
+elif (. | test( "Apt P"; "i" )) then "district-01" 
+elif (. | test( "Apt Q"; "i" )) then "district-01" 
+elif (. | test( "Unt M"; "i" )) then "district-01" 
+elif (. | test( "Unt N"; "i" )) then "district-01" 
+elif (. | test( "Unt P"; "i" )) then "district-01" 
+elif (. | test( "Unt Q"; "i" )) then "district-01" 
+else "district-unassigned" end'
+
+cat directory-orig.json | jq ''"$jqNeighborhood"'; '"$jqDistrict"'; map(. as $orig | (.address | district) as $district | (.address | neighborhood) as $neighborhood | $orig + {$district} + {$neighborhood})' > directory.json
 
 # cat directory.json | jq 'def neighborhood: if (. | test( "Dry Creek"; "i" )) then "03-dry-creek" elif (. | test( "Quivira"; "i" )) then "03-quivira" elif (. | test( "Hackberry"; "i" )) then "02-hackberry" elif (. | test( "Samara"; "i" )) then "02-samara" elif (. | test( "Serrata"; "i" )) then "02-serrata" elif (. | test( "Silver Oak"; "i" )) then "03-silver-oak" elif (. | test( "Sterling"; "i" )) then "01-sterling-loop" elif (. | test( "Syracuse"; "i" )) then "02-syracuse" elif (. | test( "Drupe"; "i" )) then "02-drupe" elif (. | test( "Unity M"; "i" )) then "01-alloy-m" elif (. | test( "Unity N"; "i" )) then "01-alloy-n" elif (. | test( "Unity P"; "i" )) then "01-alloy-p" elif (. | test( "Unity Q"; "i" )) then "01-alloy-q" elif (. | test( "Unit M"; "i" )) then "01-alloy-m" elif (. | test( "Unit N"; "i" )) then "01-alloy-n" elif (. | test( "Unit P"; "i" )) then "01-alloy-p" elif (. | test( "Unit Q"; "i" )) then "01-alloy-q" elif (. | test( "Apt M"; "i" )) then "01-alloy-m" elif (. | test( "Apt N"; "i" )) then "01-alloy-n" elif (. | test( "Apt P"; "i" )) then "01-alloy-p" elif (. | test( "Apt Q"; "i" )) then "01-alloy-q" elif (. | test( "Unt M"; "i" )) then "01-alloy-m" elif (. | test( "Unt N"; "i" )) then "01-alloy-n" elif (. | test( "Unt P"; "i" )) then "01-alloy-p" elif (. | test( "Unt Q"; "i" )) then "01-alloy-q" else "n/a" end; reduce .[] as $entry ([]; . + (($entry.address | neighborhood) as $district | $entry.members | map({uuid, name, phone, email, address: $entry.address, $district, members: $entry.members})))'
 
-# cat directory.json | jq '. | reduce .[] as $entry ([]; . + (($entry.address | neighborhood) as $district | $entry.members | map({uuid, name, phone, email, address: $entry.address, $district, members: $entry.members})))' > directory-cleaned.json
+# cat directory.json | jq '. | reduce .[] as $entry ([]; . + (($entry.address | district) as $district | $entry.members | map({uuid, name, phone, email, address: $entry.address, $district, members: $entry.members})))' > directory-cleaned.json
 # cat directory.json | jq '. | reduce .[] as $entry ([]; . + ($entry.members | map({uuid, name, phone, email, address: $entry.address, district: $entry.district})))' > directory-cleaned.json
 
 echo "fetching elders"
@@ -100,7 +121,7 @@ sleep 2
 
 eqWip=$(cat eq.json | jq '.[0] as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, id, gender, birthDate, birthDayFormatted, address, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })')
 
-echo "$eqWip" | jq ''"$jqNeighborhood"'; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > eq-cleaned.json
+echo "$eqWip" | jq ''"$jqNeighborhood"'; '"$jqDistrict"'; map(. as $orig | (.address | district) as $district | (.address | neighborhood) as $neighborhood | $orig + {$district} + {$neighborhood})' > eq-cleaned.json
 
 echo "fetching members with callings"
 
@@ -111,7 +132,7 @@ echo "fetching members with callings"
 curl 'https://lcr.churchofjesuschrist.org/services/report/members-with-callings?lang=eng&unitNumber=13730' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'Accept: application/json, text/plain, */*' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: cors' -H 'Referer: https://lcr.churchofjesuschrist.org/orgs/members-with-callings?lang=eng' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: en-US' -H $'Cookie: audience_split=21; _fbp=fb.1.1558727984750.576138409; WRUIDCD=1979799963828235; lds-preferred-lang-v2=eng; s_fid=10C2A7BB8E217B78-195A92D72803F241; _ga=GA1.2.1976242211.1564161692; _cs_c=1; _cs_ex=1; cr-aths=shown; aam_sc=aamsc%3D751537%7C708195; aam_uuid=58837750016941287141775247194571768784; amlbcookie-int=01; ORIG_URL=/sso?realm=/church&service=OktaOIDC&goto=https%3A%2F%2Frecovery-test.churchofjesuschrist.org%3A443%2Fagent%2Fcustom-login-response%3Fstate%3D816bf7c0-bd29-83ba-527c-9961f7b430d5%26realm%3D%252Fchurch%26service%3DOktaOIDC&original_request_url=https%3A%2F%2Frecovery-test.churchofjesuschrist.org%3A443%2F&authIndexType=service&authIndexValue=OktaOIDC; NTID=mCZIerHXQoW74H0AxNi5IkA8FHLSCk8w; OAUTH_LOGOUT_URL=; ChurchSSO-int=gSBvaYM8bzrBTSe3a4s52vUDSi0.*AAJTSQACMDIAAlNLABxzcXhVUDRFcjFXaVlOQ1FvZVNSZGhUcS9sNFE9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Church-auth-jwt-int=eyJ0eXAiOiJKV1QiLCJraWQiOiJrVlR5NDVhb0JoUnVBcWJ2MnQwbWU2NVpIMEk9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJkY3ZlenphbmkiLCJhdWRpdFRyYWNraW5nSWQiOiJlNGM0N2IyMy00NjYyLTQ3ODUtOGIwNi01NDE3ODU4MmY2YWItMTA4MjM2NyIsImlzcyI6Imh0dHBzOi8vaWRlbnQtaW50LmNodXJjaG9mamVzdXNjaHJpc3Qub3JnL3Nzby9vYXV0aDIiLCJ0b2tlbk5hbWUiOiJpZF90b2tlbiIsIm5vbmNlIjoiRjM1NzJCQjBEMEM3QTM3QjkxODM1QUNBMzQwREI2MkEiLCJhdWQiOiJsMTgwMjYiLCJhY3IiOiIwIiwic19oYXNoIjoid2Zwa1N0ZXBkWG9SSHJUSTFJMjFodyIsImF6cCI6ImwxODAyNiIsImF1dGhfdGltZSI6MTU4MTExMzc2NCwiZm9yZ2Vyb2NrIjp7InNzb3Rva2VuIjoiZ1NCdmFZTThienJCVFNlM2E0czUydlVEU2kwLipBQUpUU1FBQ01ESUFBbE5MQUJ4emNYaFZVRFJGY2pGWGFWbE9RMUZ2WlZOU1pHaFVjUzlzTkZFOUFBUjBlWEJsQUFORFZGTUFBbE14QUFJd01RLi4qIiwic3VpZCI6ImUzODljZWEwLTJlNDgtNGRlNi1hMTk2LWY4MTVlMzIwOTg2ZC0xMTQ5NzQyIn0sInJlYWxtIjoiL2NodXJjaCIsImV4cCI6MTU4MTE1Njk2NCwidG9rZW5UeXBlIjoiSldUVG9rZW4iLCJpYXQiOjE1ODExMTM3NjQsImFnZW50X3JlYWxtIjoiL2NodXJjaCJ9.Noaz_JG8xz2xavp5Q8pRuPktedVQgFf21fRyDVLWyQvqd8MGiohsrr8AXVPKQZrcbQieH0OzHqDzpRqv_9PJ7lLOeqc6SYaOrmzU3cj-JBUP1hAeEB3Vwsb-0d6YFv0-Z4cvuJIbPQXSuj2ku6NRQRF5V95xtQMVloKYzGRe_HNRG4NG7D9ud5fryq7YlQsqQe5NKoo6sJ1A2hjiUjt4own4tBqvuA_HCPWExvnHJ1uGcro-0Gxm6AsFQoHuVj_zjvMHILHddgAZb2xq_i8K8HDqlHNycf7eKSMpnoP5M3yYrIEZq9X4vPf2_bNmpzigv_KKCarg0QTs_Ass9RT1rQ; check=true; audience_s_split=64; s_cc=true; mboxEdgeCluster=28; _CT_RS_=Recording; __CT_Data=gpv=80&ckp=tld&dm=churchofjesuschrist.org&apv_59_www11=81&cpv_59_www11=80&rpv_59_www11=80; ADRUM=s=1581303202963&r=https%3A%2F%2Fwww.churchofjesuschrist.org%2F%3F479231918; ctm={\'pgv\':1350636977909173|\'vst\':7385663247553829|\'vstr\':5589777858429154|\'intr\':1581303204375|\'v\':1|\'lvst\':40257}; RT="z=1&dm=churchofjesuschrist.org&si=4b6bde0e-30a3-4c02-a935-10ee036a655a&ss=k6fv39vp&sl=1&tt=3xk&bcn=%2F%2F17c8edca.akstat.io%2F&ld=3xv&nu=265aa681196d3099ae5db03a5201bc77&cl=aem&ul=af3&hd=chh"; TS01b07831=01999b702368a61c83c814648324cf1d39b577e9f29e339971a112868a38dfb670410b394611b9f686b1f98ef296160de0bfc66d0e; JSESSIONID=0; __VCAP_ID__=da0a8fd4-87fa-4a73-7603-5f46; AMCVS_66C5485451E56AAE0A490D45%40AdobeOrg=1; ChurchSSO='"${ChurchSSO}"'; Church-auth-jwt-prod='"${ChurchAuthJwtProd}"'; AMCV_66C5485451E56AAE0A490D45%40AdobeOrg=1099438348%7CMCIDTS%7C18303%7CMCMID%7C45993473060174549671353300097144335983%7CMCAAMLH-1581908208%7C9%7CMCAAMB-1581908208%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1581310608s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C2.1.0; mbox=PC#ff77b07984e6447e8ca81967c1376f11.28_0#1644548038|session#2d8bd0374b7147cb86c3b15127f8eca8#1581305282; s_sq=ldsall%3D%2526pid%253Dchurchofjesuschrist.org%252520%25253A%252520lcr%252520%25253A%252520orgs%252520%25253A%2525205873015%2526pidt%253D1%2526oid%253Dhttps%25253A%25252F%25252Flcr.churchofjesuschrist.org%25252Forgs%25252Fmembers-with-callings%25253Flang%25253Deng%2526ot%253DA; utag_main=v_id:016aeb6d84c7000c9febf6d43f4003079007407101788$_sn:243$_ss:0$_st:1581305558718$vapi_domain:churchofjesuschrist.org$dc_visit:243$_se:3$ses_id:1581303192943%3Bexp-session$_pn:6%3Bexp-session$dc_event:16%3Bexp-session$dc_region:us-east-1%3Bexp-session; t_ppv=churchofjesuschrist.org%20%3A%20lcr%20%3A%20orgs%20%3A%205873015%2C66%2C8%2C676%2C343016; ADRUM_BTa=R:0|g:0a376329-7bc5-44a4-921c-16b5a44c4483|n:customer1_acb14d98-cf8b-4f6d-8860-1c1af7831070; ADRUM_BT1=R:0|i:14049|e:336' -H 'lds-account-id: 1562cace-a0ad-4df9-a868-54f2bfe5f9cc' --compressed > members-with-callings.json
 sleep 2
 
-jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map({name, age: .actualAge, birthDay: .birthDayFormatted}) as $eqInfo | $all | map(select(.filename == "members-with-callings.json"))[0].object | map({name, position, organization, unitName}) as $mwcInfo | map(select(.gender == "MALE" and ([.organization] as $organization | ((["Aaronic Priesthood Quorums", "Primary", "Bishopric", "High Council"] | contains($organization)) or (.organization | contains("Stake"))) ) )) | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember)))  | map({name, district: ($household | .district), address: $household.address, email, phone, age: (.name as $mName | $eqInfo | map(select(.name == $mName))[0].age), birthDay: (.name as $mName | $eqInfo | map(select(.name == $mName))[0].birthDay), positions: (.name as $mName | $mwcInfo | map(select(.name == $mName)) | reverse | map({unitName, organization, position})) })[0]) | map(select((. == null | not) and (.age == null | not)))| sort_by(.district, .positions[0].organization, .name)' > eq-members-with-aux-positions.json
+jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map({name, age: .actualAge, birthDay: .birthDayFormatted}) as $eqInfo | $all | map(select(.filename == "members-with-callings.json"))[0].object | map({name, position, organization, unitName}) as $mwcInfo | map(select(.gender == "MALE" and ([.organization] as $organization | ((["Aaronic Priesthood Quorums", "Primary", "Bishopric", "High Council"] | contains($organization)) or (.organization | contains("Stake"))) ) )) | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember)))  | map({name, district: ($household | .district), neighborhood: ($household | .neighborhood), address: $household.address, email, phone, age: (.name as $mName | $eqInfo | map(select(.name == $mName))[0].age), birthDay: (.name as $mName | $eqInfo | map(select(.name == $mName))[0].birthDay), positions: (.name as $mName | $mwcInfo | map(select(.name == $mName)) | reverse | map({unitName, organization, position})) })[0]) | map(select((. == null | not) and (.age == null | not)))| sort_by(.district, .positions[0].organization, .name)' > eq-members-with-aux-positions.json
 
 echo "fetching sisters"
 
@@ -121,7 +142,7 @@ sleep 2
 
 rsWip=$(cat rs.json | jq '.[0] as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, id, gender, birthDate, birthDayFormatted, address, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })')
 
-echo "$rsWip" | jq ''"$jqNeighborhood"'; map(. as $orig | (.address | neighborhood) as $district | $orig + {$district})' > rs-cleaned.json
+echo "$rsWip" | jq ''"$jqNeighborhood"'; '"$jqDistrict"'; map(. as $orig | (.address | district) as $district | (.address | neighborhood) as $neighborhood | $orig + {$district} + {$neighborhood})' > rs-cleaned.json
 
 echo "filtering for single sisters"
 
@@ -129,7 +150,7 @@ echo "filtering for single sisters"
 # pull all sisters from RS and inner join with $singleMembers
 # lookup callings for $targetMember
 
-jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json rs.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | $household | .members | map(select(.head == true)) as $heads | $household | select(($heads | length) == 1) ) as $directory | $directory | map(.members | map(select(.head == true))[0] | .name) as $singleMembers | $all | map(select(.filename == "members-with-callings.json"))[0].object | map({name, position, organization, unitName}) as $mwcInfo| $all | map(select(.filename == "rs.json"))[0].object[0].members | map(select([.name] as $targetMember | $singleMembers | contains($targetMember))) | map({name, district: (.name as $mName | $directory | map(select(.name == $mName))[0] | .district ), age, address, phone, email, birthDayFormatted, positions: (.name as $mName | $mwcInfo | map(select(.name == $mName)) | reverse | map({unitName, organization, position}))})' > single-sisters.json
+jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json rs.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | $household | .members | map(select(.head == true)) as $heads | $household | select(($heads | length) == 1) ) as $directory | $directory | map(.members | map(select(.head == true))[0] | .name) as $singleMembers | $all | map(select(.filename == "members-with-callings.json"))[0].object | map({name, position, organization, unitName}) as $mwcInfo| $all | map(select(.filename == "rs.json"))[0].object[0].members | map(select([.name] as $targetMember | $singleMembers | contains($targetMember))) | map({name, district: (.name as $mName | $directory | map(select(.name == $mName))[0] | .district ), neighborhood: (.name as $mName | $directory | map(select(.name == $mName))[0] | .neighborhood ), age, address, phone, email, birthDayFormatted, positions: (.name as $mName | $mwcInfo | map(select(.name == $mName)) | reverse | map({unitName, organization, position}))})' > single-sisters.json
 
 # incomplete; jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json rs.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "directory.json"))[0].object | map(select((.members | length) == 1)) | map(.name) as $singleMembers | $all | map(select(.filename == "rs.json"))[0].object[0].members | map(select([.name] as $targetMember | $singleMembers | contains($targetMember))) | map({name, age, address, phone, email, birthDayFormatted})' > single-sisters.json
 
@@ -189,12 +210,28 @@ cat yw.json | jq '.[0].children | map(select(.classGroup != null)) | map(. as $h
 
 echo "fetching ministering assignments"
 
-curl 'https://lcr.churchofjesuschrist.org/ministering-proposed-assignments?lang=eng&type=EQ' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'Upgrade-Insecure-Requests: 1' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36' -H 'Sec-Fetch-User: ?1' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: navigate' -H 'Referer: https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: en-US' -H $'Cookie: audience_split=21; _fbp=fb.1.1558727984750.576138409; WRUIDCD=1979799963828235; lds-preferred-lang-v2=eng; s_fid=10C2A7BB8E217B78-195A92D72803F241; _ga=GA1.2.1976242211.1564161692; _cs_c=1; _cs_ex=1; cr-aths=shown; aam_sc=aamsc%3D751537%7C708195; aam_uuid=58837750016941287141775247194571768784; amlbcookie-int=01; ORIG_URL=/sso?realm=/church&service=OktaOIDC&goto=https%3A%2F%2Frecovery-test.churchofjesuschrist.org%3A443%2Fagent%2Fcustom-login-response%3Fstate%3D816bf7c0-bd29-83ba-527c-9961f7b430d5%26realm%3D%252Fchurch%26service%3DOktaOIDC&original_request_url=https%3A%2F%2Frecovery-test.churchofjesuschrist.org%3A443%2F&authIndexType=service&authIndexValue=OktaOIDC; NTID=mCZIerHXQoW74H0AxNi5IkA8FHLSCk8w; OAUTH_LOGOUT_URL=; ChurchSSO-int=gSBvaYM8bzrBTSe3a4s52vUDSi0.*AAJTSQACMDIAAlNLABxzcXhVUDRFcjFXaVlOQ1FvZVNSZGhUcS9sNFE9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Church-auth-jwt-int=eyJ0eXAiOiJKV1QiLCJraWQiOiJrVlR5NDVhb0JoUnVBcWJ2MnQwbWU2NVpIMEk9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJkY3ZlenphbmkiLCJhdWRpdFRyYWNraW5nSWQiOiJlNGM0N2IyMy00NjYyLTQ3ODUtOGIwNi01NDE3ODU4MmY2YWItMTA4MjM2NyIsImlzcyI6Imh0dHBzOi8vaWRlbnQtaW50LmNodXJjaG9mamVzdXNjaHJpc3Qub3JnL3Nzby9vYXV0aDIiLCJ0b2tlbk5hbWUiOiJpZF90b2tlbiIsIm5vbmNlIjoiRjM1NzJCQjBEMEM3QTM3QjkxODM1QUNBMzQwREI2MkEiLCJhdWQiOiJsMTgwMjYiLCJhY3IiOiIwIiwic19oYXNoIjoid2Zwa1N0ZXBkWG9SSHJUSTFJMjFodyIsImF6cCI6ImwxODAyNiIsImF1dGhfdGltZSI6MTU4MTExMzc2NCwiZm9yZ2Vyb2NrIjp7InNzb3Rva2VuIjoiZ1NCdmFZTThienJCVFNlM2E0czUydlVEU2kwLipBQUpUU1FBQ01ESUFBbE5MQUJ4emNYaFZVRFJGY2pGWGFWbE9RMUZ2WlZOU1pHaFVjUzlzTkZFOUFBUjBlWEJsQUFORFZGTUFBbE14QUFJd01RLi4qIiwic3VpZCI6ImUzODljZWEwLTJlNDgtNGRlNi1hMTk2LWY4MTVlMzIwOTg2ZC0xMTQ5NzQyIn0sInJlYWxtIjoiL2NodXJjaCIsImV4cCI6MTU4MTE1Njk2NCwidG9rZW5UeXBlIjoiSldUVG9rZW4iLCJpYXQiOjE1ODExMTM3NjQsImFnZW50X3JlYWxtIjoiL2NodXJjaCJ9.Noaz_JG8xz2xavp5Q8pRuPktedVQgFf21fRyDVLWyQvqd8MGiohsrr8AXVPKQZrcbQieH0OzHqDzpRqv_9PJ7lLOeqc6SYaOrmzU3cj-JBUP1hAeEB3Vwsb-0d6YFv0-Z4cvuJIbPQXSuj2ku6NRQRF5V95xtQMVloKYzGRe_HNRG4NG7D9ud5fryq7YlQsqQe5NKoo6sJ1A2hjiUjt4own4tBqvuA_HCPWExvnHJ1uGcro-0Gxm6AsFQoHuVj_zjvMHILHddgAZb2xq_i8K8HDqlHNycf7eKSMpnoP5M3yYrIEZq9X4vPf2_bNmpzigv_KKCarg0QTs_Ass9RT1rQ; check=true; audience_s_split=64; s_cc=true; mboxEdgeCluster=28; _CT_RS_=Recording; __CT_Data=gpv=80&ckp=tld&dm=churchofjesuschrist.org&apv_59_www11=81&cpv_59_www11=80&rpv_59_www11=80; ADRUM=s=1581303202963&r=https%3A%2F%2Fwww.churchofjesuschrist.org%2F%3F479231918; ctm={\'pgv\':1350636977909173|\'vst\':7385663247553829|\'vstr\':5589777858429154|\'intr\':1581303204375|\'v\':1|\'lvst\':40257}; RT="z=1&dm=churchofjesuschrist.org&si=4b6bde0e-30a3-4c02-a935-10ee036a655a&ss=k6fv39vp&sl=1&tt=3xk&bcn=%2F%2F17c8edca.akstat.io%2F&ld=3xv&nu=265aa681196d3099ae5db03a5201bc77&cl=aem&ul=af3&hd=chh"; TS01b07831=01999b702368a61c83c814648324cf1d39b577e9f29e339971a112868a38dfb670410b394611b9f686b1f98ef296160de0bfc66d0e; JSESSIONID=0; __VCAP_ID__=da0a8fd4-87fa-4a73-7603-5f46; AMCVS_66C5485451E56AAE0A490D45%40AdobeOrg=1; ChurchSSO='"${ChurchSSO}"'; Church-auth-jwt-prod='"${ChurchAuthJwtProd}"'; AMCV_66C5485451E56AAE0A490D45%40AdobeOrg=1099438348%7CMCIDTS%7C18303%7CMCMID%7C45993473060174549671353300097144335983%7CMCAAMLH-1581908208%7C9%7CMCAAMB-1581908208%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1581310608s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C2.1.0; mbox=PC#ff77b07984e6447e8ca81967c1376f11.28_0#1644548038|session#2d8bd0374b7147cb86c3b15127f8eca8#1581305625; utag_main=v_id:016aeb6d84c7000c9febf6d43f4003079007407101788$_sn:243$_ss:0$_st:1581305763077$vapi_domain:churchofjesuschrist.org$dc_visit:243$_se:3$ses_id:1581303192943%3Bexp-session$_pn:7%3Bexp-session$dc_event:20%3Bexp-session$dc_region:us-east-1%3Bexp-session; t_ppv=churchofjesuschrist.org%20%3A%20lcr%20%3A%20orgs%20%3A%20members-with-callings%2C66%2C54%2C676%2C256921; s_sq=ldsall%3D%2526pid%253Dchurchofjesuschrist.org%252520%25253A%252520lcr%252520%25253A%252520orgs%252520%25253A%252520members-with-callings%2526pidt%253D1%2526oid%253Dhttps%25253A%25252F%25252Flcr.churchofjesuschrist.org%25252Fministering%25253Flang%25253Deng%252526type%25253DEQ%2526ot%253DA' -H 'lds-account-id: 1562cace-a0ad-4df9-a868-54f2bfe5f9cc' --compressed | perl -p -e 's#<#\n<#g' | sed '/__NEXT_DATA__/!d; s/<[^>]*>//g' > ministering-eq.json
+curl 'https://lcr.churchofjesuschrist.org/ministering-proposed-assignments?lang=eng&type=EQ' \
+  -H 'Connection: keep-alive' \
+  -H 'Pragma: no-cache' \
+  -H 'Cache-Control: no-cache' \
+  -H 'sec-ch-ua: "Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'Upgrade-Insecure-Requests: 1' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36' \
+  -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'Sec-Fetch-Mode: navigate' \
+  -H 'Sec-Fetch-User: ?1' \
+  -H 'Sec-Fetch-Dest: document' \
+  -H 'Referer: https://ident-prod.churchofjesuschrist.org/' \
+  -H 'Accept-Language: en-US' \
+  -H 'Cookie: Church-auth-jwt-prod='"${ChurchAuthJwtProd}"'; ChurchSSO=ChurchSSO='"${ChurchSSO}"';' \
+  --compressed | perl -p -e 's#<#\n<#g' | sed '/__NEXT_DATA__/!d; s/<[^>]*>//g' > ministering-eq.json
 
+# | perl -p -e 's#<#\n<#g' | sed '/__NEXT_DATA__/!d; s/<[^>]*>//g' > ministering-eq.json
 # | perl -p -e 's#<#\n<#g' | sed '/__NEXT_DATA__/!d; s/^[^=]*= //g' > ministering-eq.json
 # sleep 2
-
-# curl 'https://lcr.churchofjesuschrist.org/ministering-proposed-assignments?lang=eng&type=EQ' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'Upgrade-Insecure-Requests: 1' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36' -H 'Sec-Fetch-User: ?1' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: navigate' -H 'Referer: https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ' -H 'Accept-Encoding: gzip, deflate, br' -H 'Accept-Language: en-US' -H $'Cookie: audience_split=21; _fbp=fb.1.1558727984750.576138409; WRUIDCD=1979799963828235; lds-preferred-lang-v2=eng; s_fid=10C2A7BB8E217B78-195A92D72803F241; _ga=GA1.2.1976242211.1564161692; _cs_c=1; _cs_ex=1; cr-aths=shown; aam_sc=aamsc%3D751537%7C708195; aam_uuid=58837750016941287141775247194571768784; amlbcookie-int=01; ORIG_URL=/sso?realm=/church&service=OktaOIDC&goto=https%3A%2F%2Frecovery-test.churchofjesuschrist.org%3A443%2Fagent%2Fcustom-login-response%3Fstate%3D816bf7c0-bd29-83ba-527c-9961f7b430d5%26realm%3D%252Fchurch%26service%3DOktaOIDC&original_request_url=https%3A%2F%2Frecovery-test.churchofjesuschrist.org%3A443%2F&authIndexType=service&authIndexValue=OktaOIDC; NTID=mCZIerHXQoW74H0AxNi5IkA8FHLSCk8w; OAUTH_LOGOUT_URL=; ChurchSSO-int=gSBvaYM8bzrBTSe3a4s52vUDSi0.*AAJTSQACMDIAAlNLABxzcXhVUDRFcjFXaVlOQ1FvZVNSZGhUcS9sNFE9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Church-auth-jwt-int=eyJ0eXAiOiJKV1QiLCJraWQiOiJrVlR5NDVhb0JoUnVBcWJ2MnQwbWU2NVpIMEk9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJkY3ZlenphbmkiLCJhdWRpdFRyYWNraW5nSWQiOiJlNGM0N2IyMy00NjYyLTQ3ODUtOGIwNi01NDE3ODU4MmY2YWItMTA4MjM2NyIsImlzcyI6Imh0dHBzOi8vaWRlbnQtaW50LmNodXJjaG9mamVzdXNjaHJpc3Qub3JnL3Nzby9vYXV0aDIiLCJ0b2tlbk5hbWUiOiJpZF90b2tlbiIsIm5vbmNlIjoiRjM1NzJCQjBEMEM3QTM3QjkxODM1QUNBMzQwREI2MkEiLCJhdWQiOiJsMTgwMjYiLCJhY3IiOiIwIiwic19oYXNoIjoid2Zwa1N0ZXBkWG9SSHJUSTFJMjFodyIsImF6cCI6ImwxODAyNiIsImF1dGhfdGltZSI6MTU4MTExMzc2NCwiZm9yZ2Vyb2NrIjp7InNzb3Rva2VuIjoiZ1NCdmFZTThienJCVFNlM2E0czUydlVEU2kwLipBQUpUU1FBQ01ESUFBbE5MQUJ4emNYaFZVRFJGY2pGWGFWbE9RMUZ2WlZOU1pHaFVjUzlzTkZFOUFBUjBlWEJsQUFORFZGTUFBbE14QUFJd01RLi4qIiwic3VpZCI6ImUzODljZWEwLTJlNDgtNGRlNi1hMTk2LWY4MTVlMzIwOTg2ZC0xMTQ5NzQyIn0sInJlYWxtIjoiL2NodXJjaCIsImV4cCI6MTU4MTE1Njk2NCwidG9rZW5UeXBlIjoiSldUVG9rZW4iLCJpYXQiOjE1ODExMTM3NjQsImFnZW50X3JlYWxtIjoiL2NodXJjaCJ9.Noaz_JG8xz2xavp5Q8pRuPktedVQgFf21fRyDVLWyQvqd8MGiohsrr8AXVPKQZrcbQieH0OzHqDzpRqv_9PJ7lLOeqc6SYaOrmzU3cj-JBUP1hAeEB3Vwsb-0d6YFv0-Z4cvuJIbPQXSuj2ku6NRQRF5V95xtQMVloKYzGRe_HNRG4NG7D9ud5fryq7YlQsqQe5NKoo6sJ1A2hjiUjt4own4tBqvuA_HCPWExvnHJ1uGcro-0Gxm6AsFQoHuVj_zjvMHILHddgAZb2xq_i8K8HDqlHNycf7eKSMpnoP5M3yYrIEZq9X4vPf2_bNmpzigv_KKCarg0QTs_Ass9RT1rQ; check=true; audience_s_split=64; s_cc=true; mboxEdgeCluster=28; _CT_RS_=Recording; __CT_Data=gpv=80&ckp=tld&dm=churchofjesuschrist.org&apv_59_www11=81&cpv_59_www11=80&rpv_59_www11=80; ADRUM=s=1581303202963&r=https%3A%2F%2Fwww.churchofjesuschrist.org%2F%3F479231918; ctm={\'pgv\':1350636977909173|\'vst\':7385663247553829|\'vstr\':5589777858429154|\'intr\':1581303204375|\'v\':1|\'lvst\':40257}; RT="z=1&dm=churchofjesuschrist.org&si=4b6bde0e-30a3-4c02-a935-10ee036a655a&ss=k6fv39vp&sl=1&tt=3xk&bcn=%2F%2F17c8edca.akstat.io%2F&ld=3xv&nu=265aa681196d3099ae5db03a5201bc77&cl=aem&ul=af3&hd=chh"; TS01b07831=01999b702368a61c83c814648324cf1d39b577e9f29e339971a112868a38dfb670410b394611b9f686b1f98ef296160de0bfc66d0e; JSESSIONID=0; AMCVS_66C5485451E56AAE0A490D45%40AdobeOrg=1; ChurchSSO='"${ChurchSSO}"'; Church-auth-jwt-prod='"${ChurchAuthJwtProd}"'; AMCV_66C5485451E56AAE0A490D45%40AdobeOrg=1099438348%7CMCIDTS%7C18303%7CMCMID%7C45993473060174549671353300097144335983%7CMCAAMLH-1581908208%7C9%7CMCAAMB-1581908208%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1581310608s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C2.1.0; mbox=PC#ff77b07984e6447e8ca81967c1376f11.28_0#1644548038|session#2d8bd0374b7147cb86c3b15127f8eca8#1581305887; s_sq=ldsall%3D%2526pid%253Dchurchofjesuschrist.org%252520%25253A%252520lcr%252520%25253A%252520ministering%2526pidt%253D1%2526oid%253Dhttps%25253A%25252F%25252Flcr.churchofjesuschrist.org%25252Fministering-proposed-assignments%25253Flang%25253Deng%252526type%25253DEQ%2526ot%253DA; ADRUM_BTa=R:64|g:bc5180b0-7206-4b84-bb6a-0556f5001f7f|n:customer1_acb14d98-cf8b-4f6d-8860-1c1af7831070; ADRUM_BT1=R:64|i:14049|e:274; utag_main=v_id:016aeb6d84c7000c9febf6d43f4003079007407101788$_sn:243$_ss:0$_st:1581305893158$vapi_domain:churchofjesuschrist.org$dc_visit:243$_se:3$ses_id:1581303192943%3Bexp-session$_pn:8%3Bexp-session$dc_event:23%3Bexp-session$dc_region:us-east-1%3Bexp-session; __VCAP_ID__=67f01012-ad4d-4e35-7748-d889; t_ppv=churchofjesuschrist.org%20%3A%20lcr%20%3A%20ministering%2C7%2C7%2C676%2C79024' -H 'lds-account-id: 1562cace-a0ad-4df9-a868-54f2bfe5f9cc' --compressed | perl -p -e 's#<#\n<#g' | sed '/__NEXT_DATA__/!d; s/<[^>]*>//g' > ministering-eq.json
 
 sleep 2
 
@@ -213,10 +250,15 @@ sleep 2
 echo "export directory versions"
 
 cat directory.json | jq 'map(.members) | flatten | map(.name)' > directory-names.json
-cat directory.json | jq 'map(. as $household | $household | {phone, email, address, district} as $hdata | $household.members | map({name, phone: (if (.phone | length) > 0 then .phone else $hdata.phone end), email: (if (.email | length) > 0 then .email else $hdata.email end), address: $hdata.address, district: $hdata.district })) | flatten' > directory-contact-info.json
+cat directory.json | jq 'map(. as $household | $household | {phone, email, address, district, neighborhood} as $hdata | $household.members | map({name, phone: (if (.phone | length) > 0 then .phone else $hdata.phone end), email: (if (.email | length) > 0 then .email else $hdata.email end), address: $hdata.address, district: $hdata.district, neighborhood: $hdata.neighborhood })) | flatten' > directory-contact-info.json
 sleep 2
 
 yarn start
+
+cat ministering-assignments-print-out.json | jq '. | map(select(.districtName == "district-01"))[0] | .companionships | map(.ministers) | flatten' > ministering-assignments-district-01.json
+cat ministering-assignments-print-out.json | jq '. | map(select(.districtName == "district-02"))[0] | .companionships | map(.ministers) | flatten' > ministering-assignments-district-02.json
+cat ministering-assignments-print-out.json | jq '. | map(select(.districtName == "district-03"))[0] | .companionships | map(.ministers) | flatten' > ministering-assignments-district-03.json
+
 
 echo "generating report"
 

@@ -15,7 +15,9 @@
       </div>
 
       <div>
+        <button @click="queueText">Queue Text</button>
         <button @click="sendText">Send Text</button>
+        <button @click="getNextTextDetails">Count Text</button>
       </div>
    
     </div>
@@ -31,7 +33,7 @@
           <TextMessageRecipient v-if="selectedEntry" :entry="selectedEntry" inline-template>
             <div class="text-message-recipient">
               <div>
-                {{ entry.phone }}, {{ entry.lastName }}
+                {{ namePhoneEntries }}
               </div>
 
               <div>
@@ -39,7 +41,7 @@
               </div>
 
               <div>
-                <button @click="sendText">Send Text</button>
+                <button @click="queueText">Queue Text</button>
               </div>
                     
             </div>
@@ -80,16 +82,61 @@ function updateTextBody() {
   }
 }
 
-function sendText() {
-  const ans = confirm(`Are you sure you want to send text messages to ${this.namePhoneEntries.length} recipient(s)?`);
+function getNextTextDetails() {
+  return fetch('http://localhost:3000/get-next-in-queue?type=text-message', {
+    method: "GET",
+    headers: {
+      'content-type': 'application/json; charset=UTF-8',
+      'Access-Control-Allow-Origin': '*',
+    }
+  })
+  .then(data => data.json())
+  .catch(err => {
+    console.error(err)
+    return Promise.resolve({})
+  })
+}
+
+async function sendText() {
+  const details = await getNextTextDetails()
+  const { jobGroupId, type, payload } = ((details.payload || []).length > 0) ? details.payload[0] : {}
+
+  let parsedPayload = {}
+  try {
+    parsedPayload = JSON.parse(payload)
+  } catch(err) { }
+
+  const { message } = parsedPayload
+
+  const ans = confirm(`Are you sure you want to send text messages (${JSON.stringify({ jobGroupId, type })}) to ${details.payload.length} recipient(s)?\n\n${message}`);
+
+  if (ans === true) {
+    fetch(`http://localhost:3000/send-text?jobGroupId=${jobGroupId}`, {
+      method: "POST",
+      headers: {
+        'content-type': 'application/json; charset=UTF-8',
+        'Access-Control-Allow-Origin': '*',
+      }
+    })
+    .then(data => data.json())
+    .then(res => console.log(res))
+    .catch(err => console.error(err))
+  }
+}
+
+function queueText() {
+  const ans = confirm(`Are you sure you want to queue text messages to ${this.namePhoneEntries.length} recipient(s)?`);
   // if (['yes', 'y', 'Y'].includes(ans)) {
   const signature = this.signature || this.$parent.signature
   const message = this.message.replace('${signature}', signature)
   
   if (ans === true) {
-    fetch('http://localhost:3000/send-text', {
+    fetch('http://localhost:3000/queue-text', {
       method: "POST",
-      headers: {'content-type': 'application/json; charset=UTF-8'},
+      headers: {
+        'content-type': 'application/json; charset=UTF-8',
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({recipients: this.namePhoneEntries, message}),
     })
     .then(data => data.json())
@@ -110,11 +157,12 @@ Vue.component('TextMessageRecipient', {
     },
     namePhoneEntries: function() {
       const {phone, lastName} = this.entry
-      return [[phone, lastName].join(",")]
+      // return [[phone, lastName].join(",")]
+      return {phone, lastName}
     },
   },
   methods: {
-    sendText,
+    queueText,
     updateTextBody: function() {
       if (this.entry.message.length === 0) {
         this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\n${this.$parent.signature}`
@@ -123,7 +171,7 @@ Vue.component('TextMessageRecipient', {
   },
   mounted() {
     this.entry.message = `Brother ${this.entry.lastName},\n\nThis is a test.\n\n${this.$parent.signature}`
-    this.sendText = sendText.bind(this),
+    this.queueText = queueText.bind(this),
     Event.$on('updateTextBody', this.updateTextBody)
   },
   watch: {
@@ -149,7 +197,8 @@ export default {
       })
     },
     namePhoneEntries: function(){
-      return this.selectedNames.map(entry => [entry.phone, entry.lastName].join(","))
+      // return this.selectedNames.map(entry => [entry.phone, entry.lastName].join(","))
+      return this.selectedNames.map(entry => ({phone: entry.phone, lastName: entry.lastName}))
     },
   },
   data() {
@@ -165,7 +214,9 @@ export default {
     loadRecipient: function(entry) {
       this.selectedEntry = entry;
     },
+    queueText,
     sendText,
+    getNextTextDetails,
     updateTextBody: function() {
       if (this.message.length === 0 && !(this.namePhoneEntries.length > 1 || this.selectedNames.length < 1)) {
         const firstSelectedName = this.selectedNames[0].lastName
@@ -186,7 +237,9 @@ export default {
       : `Brother ${this.selectedNames[0].lastName},\n\nThis is a test.\n\n` + '${signature}'
 
     this.selectedEntry = this.selectedNames[0]
+    this.queueText = queueText.bind(this)
     this.sendText = sendText.bind(this)
+    this.getNextTextDetails = getNextTextDetails.bind(this)
   },
   watch: {
     signature: function() { Event.$emit('updateTextBody') },

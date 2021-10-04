@@ -2,6 +2,7 @@
   <div class="ministering">
 
     <div class="district" v-if="yearbook" v-for="district in ministeringAssignments">
+    <p style="font-style: italic; margin-bottom: 1em;">Note: only districts starting with 'district' will be displayed.</p>
     <District  
       :companionships.sync="district.companionships" 
       :districtName.sync="district.districtName" 
@@ -122,7 +123,7 @@ export default {
     }
   },
   mounted () {
-    this.ministeringAssignments = ministeringAssignments;
+    this.ministeringAssignments = ministeringAssignments.filter(entry => entry.districtName.startsWith('district'));
     this.yearbook = yearbook;
   },
 }

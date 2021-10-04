@@ -11,6 +11,7 @@
         <li><a href="#d1">District 1 ({{leaders[0]}})</a></li>
         <li><a href="#d2">District 2 ({{leaders[1]}})</a></li>
         <li><a href="#d3">District 3 ({{leaders[2]}})</a></li>
+        <li><a href="#d4">Unassigned ({{leaders[0]}})</a></li>
       </ul>
     
       <h3><a name="d1">District 1 ({{leaders[0]}})</a></h3><br>
@@ -27,6 +28,12 @@
 
       <h3><a name="d3">District 3 ({{leaders[2]}})</a></h3><br>
       <div v-for="elder in elders_d3" :key="elder.idx" class="elder">
+        <Person :person="elder" :show-positions="true"></Person>
+        <br/>
+      </div>
+
+      <h3><a name="d4">Unassigned ({{leaders[0]}})</a></h3><br>
+      <div v-for="elder in elders_unassigned" :key="elder.idx" class="elder">
         <Person :person="elder" :show-positions="true"></Person>
         <br/>
       </div>
@@ -90,9 +97,10 @@ export default {
   mounted() {
     this.elders = elders.map(e => ({...e, uuid: uuidv4()})).sort(sort_by("district"))
 
-    this.elders_d1 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^01')).sort(sort_by_name)
-    this.elders_d2 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^02')).sort(sort_by_name)
-    this.elders_d3 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('^03')).sort(sort_by_name)
+    this.elders_d1 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-01')).sort(sort_by_name)
+    this.elders_d2 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-02')).sort(sort_by_name)
+    this.elders_d3 = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-03')).sort(sort_by_name)
+    this.elders_unassigned = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.district.match('-unassigned')).sort(sort_by_name)
 
     
     this.elders_ym = this.elders.map(e => ({...e, idx: uuidv4()})).filter(e => e.positions.filter(p => p.organization === "Aaronic Priesthood Quorums").length > 0).sort(sort_by_name)

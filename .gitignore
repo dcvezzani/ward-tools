@@ -13,3 +13,5 @@ photos/
 
 work/
 tiles/
+
+*.sqlite3

@@ -104,7 +104,7 @@ String.prototype.hashCode = function() {
 
 const getBrothers = (data, districtNumber, options) => {
   const { includeYm } = options
-  const re = new RegExp(`^0${districtNumber}-`)
+  const re = new RegExp((districtNumber === 1) ? `-0${districtNumber}|-unassigned` : `-0${districtNumber}`)
   var reAge = /\(([^\)]*)\)/
 
   return Object.keys(data.ministering_brothers)
@@ -133,7 +133,7 @@ const getBrothers = (data, districtNumber, options) => {
 };
 
 const getFamilies = (data, districtNumber) => {
-  const re = new RegExp(`^0${districtNumber}-`)
+  const re = new RegExp((districtNumber === 1) ? `-0${districtNumber}|-unassigned` : `-0${districtNumber}`)
   return Object.keys(data.ministering_families).filter(district_name => district_name.match(re)).reduce((list, district_name) => {
     const families = data.ministering_families[district_name].map(name => ({id: name.hashCode(), name, district_name}))
     list = list.concat(families)

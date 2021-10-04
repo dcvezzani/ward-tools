@@ -1,5 +1,8 @@
 # send individual and personalize text messages
 message=$(echo "$1" | base64 --decode)
+# echo "code: $code, message: '${message}', name: '${2}'"
+# exit 1
+
 # | perl -p -e 's###g'))
 for line in $2; do
   name="${line##*,}"
@@ -27,8 +30,8 @@ for line in $2; do
 # EOF
   # echo "messageCopy: ${messageCopy}"
 
-  # osascript ~/scripts/sendMessage.applescript "$phone" "$MSG"
-  osascript ./scripts/sendMessage.scpt "$phone" "$MSG"
+  # xxx osascript ~/scripts/sendMessage.applescript "$phone" "$MSG"
+  # osascript ./scripts/sendMessage.scpt "$phone" "$MSG"
   # echo "MSG: $MSG"
   # echo $(pwd)
 
