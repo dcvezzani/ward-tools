@@ -23,6 +23,11 @@ module.exports.getUnprocessedJobsFor = type => {
   // select * from queue where jobGroupId in (select jobGroupId from queue group by jobGroupId, created_at order by created_at desc limit 1) and processed_at is null order by id desc
 }
 
+module.exports.getUnprocessedJobForId = id => {
+  return db('queue').where({id}).whereNull('processed_at')
+  // select * from queue where jobGroupId in (select jobGroupId from queue group by jobGroupId, created_at order by created_at desc limit 1) and processed_at is null order by id desc
+}
+
 module.exports.processJob = ({id, payload, state='begin'}) => {
   return db('queue').where({id})
   .update({id, state, processed_payload: JSON.stringify(payload), processed_at: db.fn.now()})

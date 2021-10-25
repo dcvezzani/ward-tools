@@ -33,6 +33,17 @@ function sendIndividualText({name, phone, message}) {
 
 const processJob = async (job) => {
   const {id: job_id, type, jobGroupId, payload, created_at} = job
+  
+  const alreadyProcessed = db.getUnprocessedJobForId(job_id).first()
+  .then(payload => Promise.resolve(!!payload))
+  .catch(err => Promise.resolve(false))
+
+  if (alreadyProcessed) {
+    try {
+      console.warn("WARN: Job has already been processed", JSON.stringify(job))
+    } catch (err) {}
+    return false
+  }
 
   await db.processJob({id: job_id, state: 'begin'})
   .catch(err => {
