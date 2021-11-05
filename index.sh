@@ -1,3 +1,4 @@
+function loadCookies() {
 lines=$(cat cookie.txt | perl -p -e 's# #\n#g' | grep 'ChurchSSO\|Church-auth-jwt-prod\|directory_access_token\|directory_refresh_token')
 authorization_token=$(cat cookie.txt | sed '/authorization: Bearer/!d' | perl -p -e 's#^.*authorization: Bearer ([^'"'"']*).*#\1#g')
 refresh_token=$(cat cookie.txt | sed '/x-refresh/!d' | perl -p -e 's#^.*-H '"'"'x-refresh: ([^'"'"']*).*#\1#g')
@@ -9,21 +10,28 @@ directory_access_token=$(echo $lines | sed '/directory_access_token=/!d' | perl 
 # directory_refresh_token=$(echo $lines | perl -p -e 's#^.*directory_refresh_token=([^ ;]*).*#\1#g' | perl -p -e 's#^[^=]*=([^;]*).*#\1#g')
 directory_refresh_token=$(echo $lines | sed '/directory_refresh_token=/!d' | perl -p -e 's#^.*directory_refresh_token=([^ ;]*).*#\1#g' | perl -p -e 's#^[^=]*=([^;]*).*#\1#g')
 
-# TODO: add these?
-# aam_sc=aamsc%3D751537%7C708195; 
-# ChurchSSO-int=wzBgxCgubHc4co1L7nMvZSsKKe0.*AAJTSQACMDIAAlNLABxZc3R0TTVkbndaNys0NGtrTjcrV1pMWE9HMmM9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; 
-# Church-auth-jwt-int=eyJ0eXAiOiJKV1QiLCJraWQiOiJrVlR5NDVhb0JoUnVBcWJ2MnQwbWU2NVpIMEk9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJkY3ZlenphbmkiLCJhdWRpdFRyYWNraW5nSWQiOiJiZDg2ZDQ0MC1kOGQyLTRjYjMtOTc3ZS0wYTA4ZDZmMDk5MmItMTA0NDc1MTYiLCJpc3MiOiJodHRwczovL2lkZW50LWludC5jaHVyY2hvZmplc3VzY2hyaXN0Lm9yZy9zc28vb2F1dGgyIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJub25jZSI6IkJFOTc3NTVENTQ2MUZGQ0JDNEY1ODEyQkU4QjkyN0U2IiwiYXVkIjoibDE4MDI3IiwiYWNyIjoiMCIsInNfaGFzaCI6Ilp5MzEtcGlpWGNSOUZ1VS0zaG9sT3ciLCJhenAiOiJsMTgwMjciLCJhdXRoX3RpbWUiOjE1Nzk2NDQxMTAsImZvcmdlcm9jayI6eyJzc290b2tlbiI6Ind6Qmd4Q2d1YkhjNGNvMUw3bk12WlNzS0tlMC4qQUFKVFNRQUNNRElBQWxOTEFCeFpjM1IwVFRWa2JuZGFOeXMwTkd0clRqY3JWMXBNV0U5SE1tTTlBQVIwZVhCbEFBTkRWRk1BQWxNeEFBSXdNUS4uKiIsInN1aWQiOiJmMzY1OGM3Mi1lMjgyLTRiY2YtOGUxMy0yZTcxZmU2MzhhYzktMTAzMzMyNjcifSwicmVhbG0iOiIvY2h1cmNoIiwiZXhwIjoxNTc5Njg3MzEwLCJ0b2tlblR5cGUiOiJKV1RUb2tlbiIsImlhdCI6MTU3OTY0NDExMCwiYWdlbnRfcmVhbG0iOiIvY2h1cmNoIn0.BiWwTjRX6BMZ4Nyeq3fX49DU36cxiYqkP9h0EKWqLY4x73TRatdZ4_rDhETFWxog75rWXtyCn21l84sw8ueP6GutKCgwHysJlFoBnpn2_BHPGsitdpDPo8AfrZSEEfnOvRVO6vPFUkD7WuxwTErfbZ-CNs_5Lm_JLonAY4CAP43St6gq-aeqK_cFZcsG4_ARbk2uX4BGZgYDXIHUxGZZZ6LWX7YuPBiSIWqYq9LsgNoTwgu2foHIf1Q_VQI7g0nY8HhJdt2UjHm312VaEk6aMZ3t3-Zyi_lOxVqsuOVyGHyqCSxTgL2lOeuNkMXvKi11_AHQhWr5IL-hIOwN4e7YCg; 
-# TS01a096ec=01999b7023f962af0b95544d7ea951d0dac619e2fcf70032c859dbad548e18bc6f59a1efa460369ab9d55d0b22c33e35ef2535e546; 
-
 echo "authorization_token=\"${authorization_token}\""
 echo "refresh_token=\"${refresh_token}\""
 echo "ChurchSSO=\"${ChurchSSO}\""
 echo "ChurchAuthJwtProd=\"${ChurchAuthJwtProd}\""
 echo "directory_access_token=\"${directory_access_token}\""
 echo "directory_refresh_token=\"${directory_refresh_token}\""
+echo ""
 
+echo "Load these cookies? (Enter=yes; Ctrl-C=no)"
 read cont
+}
 
+# TODO: add these?
+# aam_sc=aamsc%3D751537%7C708195; 
+# ChurchSSO-int=wzBgxCgubHc4co1L7nMvZSsKKe0.*AAJTSQACMDIAAlNLABxZc3R0TTVkbndaNys0NGtrTjcrV1pMWE9HMmM9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; 
+# Church-auth-jwt-int=eyJ0eXAiOiJKV1QiLCJraWQiOiJrVlR5NDVhb0JoUnVBcWJ2MnQwbWU2NVpIMEk9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJkY3ZlenphbmkiLCJhdWRpdFRyYWNraW5nSWQiOiJiZDg2ZDQ0MC1kOGQyLTRjYjMtOTc3ZS0wYTA4ZDZmMDk5MmItMTA0NDc1MTYiLCJpc3MiOiJodHRwczovL2lkZW50LWludC5jaHVyY2hvZmplc3VzY2hyaXN0Lm9yZy9zc28vb2F1dGgyIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJub25jZSI6IkJFOTc3NTVENTQ2MUZGQ0JDNEY1ODEyQkU4QjkyN0U2IiwiYXVkIjoibDE4MDI3IiwiYWNyIjoiMCIsInNfaGFzaCI6Ilp5MzEtcGlpWGNSOUZ1VS0zaG9sT3ciLCJhenAiOiJsMTgwMjciLCJhdXRoX3RpbWUiOjE1Nzk2NDQxMTAsImZvcmdlcm9jayI6eyJzc290b2tlbiI6Ind6Qmd4Q2d1YkhjNGNvMUw3bk12WlNzS0tlMC4qQUFKVFNRQUNNRElBQWxOTEFCeFpjM1IwVFRWa2JuZGFOeXMwTkd0clRqY3JWMXBNV0U5SE1tTTlBQVIwZVhCbEFBTkRWRk1BQWxNeEFBSXdNUS4uKiIsInN1aWQiOiJmMzY1OGM3Mi1lMjgyLTRiY2YtOGUxMy0yZTcxZmU2MzhhYzktMTAzMzMyNjcifSwicmVhbG0iOiIvY2h1cmNoIiwiZXhwIjoxNTc5Njg3MzEwLCJ0b2tlblR5cGUiOiJKV1RUb2tlbiIsImlhdCI6MTU3OTY0NDExMCwiYWdlbnRfcmVhbG0iOiIvY2h1cmNoIn0.BiWwTjRX6BMZ4Nyeq3fX49DU36cxiYqkP9h0EKWqLY4x73TRatdZ4_rDhETFWxog75rWXtyCn21l84sw8ueP6GutKCgwHysJlFoBnpn2_BHPGsitdpDPo8AfrZSEEfnOvRVO6vPFUkD7WuxwTErfbZ-CNs_5Lm_JLonAY4CAP43St6gq-aeqK_cFZcsG4_ARbk2uX4BGZgYDXIHUxGZZZ6LWX7YuPBiSIWqYq9LsgNoTwgu2foHIf1Q_VQI7g0nY8HhJdt2UjHm312VaEk6aMZ3t3-Zyi_lOxVqsuOVyGHyqCSxTgL2lOeuNkMXvKi11_AHQhWr5IL-hIOwN4e7YCg; 
+# TS01a096ec=01999b7023f962af0b95544d7ea951d0dac619e2fcf70032c859dbad548e18bc6f59a1efa460369ab9d55d0b22c33e35ef2535e546; 
+
+
+echo "Get copy of Directory curl; paste in ./cookies.txt"
+read cont
+loadCookies
 
 echo "fetching directory"
 
@@ -33,7 +41,10 @@ echo "fetching directory"
 
 curl 'https://directory.churchofjesuschrist.org/api/v4/households?unit=13730' -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'authorization: Bearer '"${authorization_token}" -H 'x-refresh: '"${refresh_token}" -H 'Accept-Language: en-US' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36' -H 'Accept: */*' -H 'Sec-Fetch-Site: same-origin' -H 'Sec-Fetch-Mode: cors' -H 'Referer: https://directory.churchofjesuschrist.org/13730' -H 'Accept-Encoding: gzip, deflate, br' -H $'Cookie: audience_split=21; _fbp=fb.1.1558727984750.576138409; WRUIDCD=1979799963828235; lds-preferred-lang-v2=eng; s_fid=10C2A7BB8E217B78-195A92D72803F241; _ga=GA1.2.1976242211.1564161692; _cs_c=1; _cs_ex=1; aam_uuid=58837750016941287141775247194571768784; _CT_RS_=Recording; aam_sc=aamsc%3D751537%7C708195; __CT_Data=gpv=79&ckp=tld&dm=churchofjesuschrist.org&apv_59_www11=80&cpv_59_www11=79&rpv_59_www11=79; ctm={\'pgv\':1671447134779311|\'vst\':4659397996010721|\'vstr\':5589777858429154|\'intr\':1578887788899|\'v\':1|\'lvst\':21497}; ChurchSSO-int=wzBgxCgubHc4co1L7nMvZSsKKe0.*AAJTSQACMDIAAlNLABxZc3R0TTVkbndaNys0NGtrTjcrV1pMWE9HMmM9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Church-auth-jwt-int=eyJ0eXAiOiJKV1QiLCJraWQiOiJrVlR5NDVhb0JoUnVBcWJ2MnQwbWU2NVpIMEk9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJkY3ZlenphbmkiLCJhdWRpdFRyYWNraW5nSWQiOiJiZDg2ZDQ0MC1kOGQyLTRjYjMtOTc3ZS0wYTA4ZDZmMDk5MmItMTA0NDc1MTYiLCJpc3MiOiJodHRwczovL2lkZW50LWludC5jaHVyY2hvZmplc3VzY2hyaXN0Lm9yZy9zc28vb2F1dGgyIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJub25jZSI6IkJFOTc3NTVENTQ2MUZGQ0JDNEY1ODEyQkU4QjkyN0U2IiwiYXVkIjoibDE4MDI3IiwiYWNyIjoiMCIsInNfaGFzaCI6Ilp5MzEtcGlpWGNSOUZ1VS0zaG9sT3ciLCJhenAiOiJsMTgwMjciLCJhdXRoX3RpbWUiOjE1Nzk2NDQxMTAsImZvcmdlcm9jayI6eyJzc290b2tlbiI6Ind6Qmd4Q2d1YkhjNGNvMUw3bk12WlNzS0tlMC4qQUFKVFNRQUNNRElBQWxOTEFCeFpjM1IwVFRWa2JuZGFOeXMwTkd0clRqY3JWMXBNV0U5SE1tTTlBQVIwZVhCbEFBTkRWRk1BQWxNeEFBSXdNUS4uKiIsInN1aWQiOiJmMzY1OGM3Mi1lMjgyLTRiY2YtOGUxMy0yZTcxZmU2MzhhYzktMTAzMzMyNjcifSwicmVhbG0iOiIvY2h1cmNoIiwiZXhwIjoxNTc5Njg3MzEwLCJ0b2tlblR5cGUiOiJKV1RUb2tlbiIsImlhdCI6MTU3OTY0NDExMCwiYWdlbnRfcmVhbG0iOiIvY2h1cmNoIn0.BiWwTjRX6BMZ4Nyeq3fX49DU36cxiYqkP9h0EKWqLY4x73TRatdZ4_rDhETFWxog75rWXtyCn21l84sw8ueP6GutKCgwHysJlFoBnpn2_BHPGsitdpDPo8AfrZSEEfnOvRVO6vPFUkD7WuxwTErfbZ-CNs_5Lm_JLonAY4CAP43St6gq-aeqK_cFZcsG4_ARbk2uX4BGZgYDXIHUxGZZZ6LWX7YuPBiSIWqYq9LsgNoTwgu2foHIf1Q_VQI7g0nY8HhJdt2UjHm312VaEk6aMZ3t3-Zyi_lOxVqsuOVyGHyqCSxTgL2lOeuNkMXvKi11_AHQhWr5IL-hIOwN4e7YCg; check=true; AMCVS_66C5485451E56AAE0A490D45%40AdobeOrg=1; audience_s_split=74; s_cc=true; TS01b07831=01999b70239f8d3c15fe7bb56e832f735ecb59dfa3809782e3ecd3405397b369368c479be387201e3b1a950c11ac4ea94a3946e73b; ADRUM=s=1579825962969&r=https%3A%2F%2Fwww.churchofjesuschrist.org%2F%3F479231918; RT="z=1&dm=churchofjesuschrist.org&si=d35cd4ef-57f0-4ed4-8a5d-dec2214a0714&ss=k5rfk3p0&sl=2&tt=6bp&obo=1&bcn=%2F%2F173e2548.akstat.io%2F&ld=11hh&nu=08b89d78d40e90b8b126f7a10960d4e4&cl=12x9&ul=12xn&hd=13f1"; TS01a096ec=01999b7023f962af0b95544d7ea951d0dac619e2fcf70032c859dbad548e18bc6f59a1efa460369ab9d55d0b22c33e35ef2535e546; ChurchSSO='"${ChurchSSO}"'; Church-auth-jwt-prod='"${ChurchAuthJwtProd}"'; TS0186bb65=01999b70235336f0c67a0f3216747f586fb6c09c2f76aa8d8d9e8501146d5753fd9e1eb1bcf8726bb98359aa5204bd33485b471455; directory_access_token='"${directory_access_token}"'; directory_refresh_token='"${directory_refresh_token}"'; AMCV_66C5485451E56AAE0A490D45%40AdobeOrg=-330454231%7CMCIDTS%7C18280%7CMCMID%7C45993473060174549671353300097144335983%7CMCAAMLH-1580434689%7C9%7CMCAAMB-1580434689%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1579837089s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C3.1.2; s_sq=%5B%5BB%5D%5D; mboxEdgeCluster=28; mbox=PC#ff77b07984e6447e8ca81967c1376f11.28_0#1643074702|session#c2983b608c5f46c4875b95c6dfd7f5e3#1579831430; ADRUM_BTa=R:47|g:d60c3734-8ec9-4ba6-a83f-8b76de91883c|n:customer1_acb14d98-cf8b-4f6d-8860-1c1af7831070; ADRUM_BT1=R:47|i:22765|e:1002|d:92; t_ppv=Ward%20Directory%20and%20Map%2C0%2C100%2C267%2C2447; utag_main=v_id:016aeb6d84c7000c9febf6d43f4003079007407101788$_sn:226$_ss:0$_st:1579831702234$vapi_domain:churchofjesuschrist.org$dc_visit:226$_se:3$ses_id:1579827934751%3Bexp-session$_pn:8%3Bexp-session$dc_event:20%3Bexp-session$dc_region:us-east-1%3Bexp-session' -H 'lds-account-id: 1562cace-a0ad-4df9-a868-54f2bfe5f9cc' --compressed > directory.json
 
-sleep 2
+echo "Get copy of LCR curl; paste in ./cookies.txt"
+read cont
+loadCookies
+# sleep 2
 
 # echo "fetching directory contact info"
 # 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "Deprecated; use 'get-photos-02.sh' instead"
-exit(1)
+# echo "Deprecated; use 'get-photos-02.sh' instead"
+# exit 1
 
 lines=$(cat cookie.txt | perl -p -e 's# #\n#g' | grep 'ChurchSSO\|Church-auth-jwt-prod\|directory_access_token\|directory_refresh_token\|directory_identity_token')
 authorization_token=$(cat cookie.txt | perl -p -e 's#^.*authorization: Bearer ([^'"'"']*).*#\1#g')
