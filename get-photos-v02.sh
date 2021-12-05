@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# =======================
 function loadCookies() {
 lines=$(cat cookie.txt | perl -p -e 's# #\n#g' | grep 'ChurchSSO\|Church-auth-jwt-prod\|directory_access_token\|directory_refresh_token\|directory_identity_token')
 authorization_token=$(cat cookie.txt | perl -p -e 's#^.*authorization: Bearer ([^'"'"']*).*#\1#g')
@@ -27,28 +28,53 @@ read cont
 
 # s/Church-auth-jwt-prod[^;]*;/Church-auth-jwt-prod='"${ChurchAuthJwtProd}"';/gc
 
-echo "Get copy of LCR curl; paste in ./cookies.txt"
-read cont
-loadCookies
-
+# =======================
+function fetchElders() {
 echo "fetching elder data"
 
 # eldersData=$(jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember))) | map({name, id, district: ($household | .district), address: $household.address, email, phone})[0]) as $elderDetails | $elderDetails | map(select(.id != null) | .id) as $ids | $all | map(select(.filename == "directory.json"))[0].object | map(.members | map(. as $targetMember | $targetMember | select($ids | contains([$targetMember | .id])))) | flatten | map({id, householdUuid, name, district: (.name as $mName | $elderDetails | map(select(.name == $mName))[0].district)})')
 
 eldersData=$(cat eq-cleaned.json | jq 'map({id, name, district})')
+}
 
-  # {
-  #   "id": "5d17243a-d98e-4e7f-a1e1-7ba20e1e430a",
-  #   "name": "Woolf, Kasey",
-  #   "district": "01-alloy-m"
-  # }
+# =======================
+function fetchElderMinisteringAssignments() {
+echo "fetching elder ministering assignments"
 
-# sleep 2
+# eldersData=$(jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember))) | map({name, id, district: ($household | .district), address: $household.address, email, phone})[0]) as $elderDetails | $elderDetails | map(select(.id != null) | .id) as $ids | $all | map(select(.filename == "directory.json"))[0].object | map(.members | map(. as $targetMember | $targetMember | select($ids | contains([$targetMember | .id])))) | flatten | map({id, householdUuid, name, district: (.name as $mName | $elderDetails | map(select(.name == $mName))[0].district)})')
 
+ministeringData=$(cat ministering-brothers.json | jq 'map({id: .legacyCmisId, districtName})')
+}
+
+# =======================
+function transformEldersMinisteringAssignments() {
+echo "transform elder ministering assignments"
+
+local jqPayload=$(cat <<-EOL
+{"eldersData":$eldersData,"ministeringData":$ministeringData}
+EOL
+)
+
+local findMinisteringAssignment=$(cat <<-'EOL'
+def findMinisteringAssignment(ministeringData; id): 
+id as $id | 
+ministeringData as $ministeringData | 
+($ministeringData | map(select(.id == $id)) | first) as $ministeringDataResult | 
+if ($ministeringDataResult) then ($ministeringDataResult.districtName) else (null) end
+EOL
+)
+
+eldersData=$(echo "$jqPayload" | jq -r "${findMinisteringAssignment};"' .eldersData as $eldersData | .ministeringData as $ministeringData | $eldersData | reduce .[] as $elderData ([]; . + [$elderData * {"ministeringDistrict": findMinisteringAssignment($ministeringData; $elderData.id)}])')
+}
+
+# =======================
+function writeYearbook() {
 echo "writing yearbook data"
 
 echo "$eldersData" | perl -p -e "s#'##g" | jq 'map(. as $elder | $elder | (.name | gsub("[., -]+"; "-") | ascii_downcase) as $namePath | "/photos/" as $path | $elder + {"elderPhoto": ($path + $namePath + ".png"), "familyPhoto": ($path + $namePath + "-family.png")})' > yearbook.json
+}
 
+# =======================
 photo_exists () {
   local filename="$1"
   local ignore="$2"
@@ -95,6 +121,7 @@ photo_exists () {
   fi
 }
 
+# =======================
 fetch_photo_using_tokenurl () {
 
   local id="$1"
@@ -131,6 +158,7 @@ curl ''"${imageTokenUrl}"'/MEDIUM' \
 sleep 2
 }
 
+# =======================
 fetch_individual_photo () {
   local id="$1"
   local filename="$2"
@@ -162,6 +190,7 @@ fetch_photo_using_tokenurl "$id" "$filename" "$imageTokenUrl"
 
 }
 
+# =======================
 fetch_household_photo () {
   local id="$1"
   local filename="$2"
@@ -186,6 +215,7 @@ imageTokenUrl=$(curl 'https://lcr.churchofjesuschrist.org/services/photos/manage
   fetch_photo_using_tokenurl "$id" "$filename" "$imageTokenUrl"
 }
 
+# =======================
 fetch_photo () {
   local scope="$1"
   local id="$2"
@@ -214,23 +244,37 @@ fetch_photo () {
   return 0
 }
 
+# =======================
 apply_placeholder () {
   echo
-  echo "Applying placeholders for elders and families without photos..."
+  local photoCount=$(ls -1 ./photos | xargs | wc -w | xargs)
+  echo "Applying placeholders for elders and families without photos (count ${photoCount})..."
+  local cnt=0
   for file in $(ls -1 ./photos | xargs); do
     filename="photos/$file"
     photo_exists "$filename" ignore,placeholders
     retVal="$?"
     # echo "retVal: $retVal"
-    printf "."
+
+    if [[ $(($cnt % 50)) == 0 ]]; then
+      printf "\n  ($cnt)."
+    elif [[ $cnt == 0 ]]; then
+      printf "  ($cnt)."
+    else
+      printf "."
+    fi
+
     if [ "$retVal" != "0" ]; then
       echo "missing photo for $filename; copying placeholder"
       cp profile-placeholder.png "$filename"
     fi
+    ((cnt++))
   done
+  echo
   return 0
 }
 
+# =======================
 download_missing_photos () {
   local scope="$1"
   local id="$2"
@@ -250,6 +294,7 @@ download_missing_photos () {
   return 0
 }
 
+# =======================
 all_elders () {
   for data in $(echo "$eldersData" | perl -p -e "s#'##g" | jq -r '. | map((.id | tostring) + ":" + (.name | gsub("[., -]+"; "-") | ascii_downcase)) | join("\n")'); do
     name=$(echo "${data#*:}" | xargs)
@@ -258,6 +303,7 @@ all_elders () {
   done
 }
 
+# =======================
 all_families () {
   for data in $(echo "$eldersData" | perl -p -e "s#'##g" | jq -r '. | map((.id | tostring) + ":" + (.name | gsub("[., -]+"; "-") | ascii_downcase + "-family")) | join("\n")'); do
     name=$(echo "${data#*:}" | xargs)
@@ -267,6 +313,7 @@ all_families () {
   done
 }
 
+# =======================
 retry_elders () {
   echo
   echo "Retry getting photos for elders..."
@@ -278,6 +325,7 @@ retry_elders () {
   done
 }
 
+# =======================
 retry_families () {
   echo
   echo "Retry getting photos for elder families..."
@@ -292,7 +340,17 @@ retry_families () {
 # fetch_photo households 3694966261 lastname-firstname-family false
 
 # fetch_photo households 9788020985 farmer-kade-family
-fetch_photo households 43938146779 burmer-tom-family
+# fetch_photo households 43938146779 burmer-tom-family
+
+fetchElders
+fetchElderMinisteringAssignments
+transformEldersMinisteringAssignments
+
+writeYearbook
+
+# echo "Get copy of LCR curl; paste in ./cookies.txt"
+# read cont
+# loadCookies
 
 # retry_elders
 # retry_families

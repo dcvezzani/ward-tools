@@ -1,7 +1,9 @@
+# =======================
 function dividerLine {
 echo "________________________________"
 }
 
+# =======================
 function generateReport {
 dividerLine
 echo "crunching report data"
@@ -23,6 +25,7 @@ cat report-final.json| jq --sort-keys '{ministering_brothers: .ministering_broth
 cat report-summary.json | jq '.'
 }
 
+# =======================
 function transformDirectoryVersions {
 dividerLine
 echo "export directory versions"
@@ -32,6 +35,7 @@ cat directory.json | jq 'map(. as $household | $household | {phone, email, addre
 sleep 2
 }
 
+# =======================
 function transformMinisteringAssignments {
 dividerLine
 echo "transforming ministering assignments"
@@ -43,12 +47,80 @@ echo "transforming ministering assignments"
 # include boolean flag indicating if there are more than 1 elder in a companionship
 # if there is only 1 elder assigned, include him in the list of brothers who need a ministering companion
 # hasCompanion: (1 - 2 or more; 0 - 1 or less) brothers assigned to companionship
-cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ((if ($district.companionships) then ($district.companionships) else ([]) end) | reduce .[] as $companionship ([]; . + ($companionship.ministers as $ministers | $ministers | map(. as $elder | (if (($ministers | length) > 1) then (1) else (0) end) as $hasCompanion | $elder * {companionshipMembersSize: ($ministers | length), hasCompanion: $hasCompanion}))))) | sort_by(.name)' > ministering-brothers.json
+cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; $district.districtName as $districtName | . + ((if ($district.companionships) then ($district.companionships) else ([]) end) | reduce .[] as $companionship ([]; . + ($companionship.ministers as $ministers | $ministers | map(. as $elder | (if (($ministers | length) > 1) then (1) else (0) end) as $hasCompanion | $elder * {companionshipMembersSize: ($ministers | length), districtName: $districtName, hasCompanion: $hasCompanion}))))) | sort_by(.name)' > ministering-brothers.json
 
-cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; . + ((if ($district.companionships) then ($district.companionships) else ([]) end) | reduce .[] as $companionship ([]; . + $companionship.assignments))) | sort_by(.name)' > ministering-families.json
+cat ministering-eq.json | jq '.props.pageProps.initialState.ministeringData.elders | reduce .[] as $district ([]; $district.districtName as $districtName | . + ((if ($district.companionships) then ($district.companionships) else ([]) end) | reduce .[] as $companionship ([]; . + ($companionship.assignments | reduce .[] as $assignment ([]; . + [$assignment * {districtName: $districtName}]))))) | sort_by(.name)' > ministering-families.json
+
+compileMinisteringAndDirectoryData
+
 sleep 2
 }
 
+# =======================
+function compileMinisteringAndDirectoryData {
+
+#   {
+#     "phone": "801-471-5269",
+#     "email": "jiggajka@yahoo.com",
+#     "address": "140 S Dry Creek Ln\nVineyard, Utah 84059-5680",
+#     "name": "Ahlmann, Justin",
+#     "companionshipId": 1
+#   },
+  
+local findIndividualContactInfo=$(cat <<-'EOL'
+def findIndividualContactInfo(directoryData; name): 
+name as $name | 
+directoryData as $directoryData | 
+($directoryData | map(select((isempty(.) == false) and (.name == $name))) | first) as $memberContactInfoResult | 
+if ($memberContactInfoResult) then ({phone: $memberContactInfoResult.phone, email: $memberContactInfoResult.email, address: ($memberContactInfoResult.address | gsub("\n"; "\\n")), name: $memberContactInfoResult.name}) else ({}) end
+EOL
+)
+
+local payload=$(jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' ministering-eq.json directory-contact-info.json | 
+jq -ns 'inputs' | 
+jq -r "${findIndividualContactInfo};"'. as $all | 
+$all | map(select(.filename == "ministering-eq.json")) | first as $ministering | 
+$all | map(select(.filename == "directory-contact-info.json")) | first as $directory | 
+$ministering.object | 
+.props.pageProps.initialState.ministeringData.elders | map(select(. | has("companionships"))) | 
+map(. as $districtEntry | ($districtEntry.companionships | 
+  to_entries |
+  reduce .[] as $companionship ([]; ($companionship.key + 1) as $companionshipId | . + 
+    (
+      $companionship.value.ministers |
+      map(
+        findIndividualContactInfo($directory.object; .name)
+        * {companionshipId: $companionshipId}
+      )
+    )
+  )) as $districtCompanionships | 
+  {district: $districtEntry.districtName, companionships: $districtCompanionships}
+)
+')
+
+echo "$payload"
+for district in $(echo "$payload" | jq -r '. | map(.district) | join(" ")'); do
+  filename="./ministering-assignments-${district}.json"
+  printf "Writing to file: ${filename}..."
+  echo "$payload" | jq '. | (map(select(.district == "'"$district"'")) | first) | .companionships' > "$filename"
+  echo "DONE!"
+done
+
+
+# jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' ministering-eq.json directory-cleaned.json | 
+# jq -ns 'inputs' | 
+# jq ""'. as $all | 
+# $all | map(select(.filename == "ministering-eq.json")) | first as $ministering | 
+# $all | map(select(.filename == "directory-cleaned.json")) | first as $directory | 
+# $directory.object as $directoryData | 
+# "Ahlmann, Justin" as $name | 
+# ($directoryData | map(select((isempty(.) == false) and (.name == $name))) | first) as $memberContactInfoResult | 
+# if ($memberContactInfoResult) then ({phone: $memberContactInfoResult.phone, email: $memberContactInfoResult.email, address: $memberContactInfoResult.address, name: $memberContactInfoResult.name}) else ({}) end'
+
+}
+
+
+# =======================
 function loadCookies() {
 dividerLine
 echo "loading cookies"
@@ -82,6 +154,7 @@ read cont
 # TS01a096ec=01999b7023f962af0b95544d7ea951d0dac619e2fcf70032c859dbad548e18bc6f59a1efa460369ab9d55d0b22c33e35ef2535e546; 
 }
 
+# =======================
 function fetchYM {
 dividerLine
 echo "fetching ym"
@@ -93,6 +166,7 @@ sleep 2
 cat ym.json | jq '.[0].children | map(select(((.filterOffices | length) > 0))) | map(. as $head | $head.filterOffices | reduce .[] as $item ({}; . * ($item.codes | reduce .[] as $code ({}; . * ({ ($code|tostring): $item.name })))) | . as $officeMap | $head.members | map({ name, gender, birthDate, priesthood: $officeMap[(.priesthoodCode | tostring)], actualAge, nonMember, endowed, eligibleForHomeTeachingAssignment })) | reduce .[] as $quorum ([]; . + $quorum) | map(select(.eligibleForHomeTeachingAssignment == true))' > ym-cleaned.json
 }
 
+# =======================
 function fetchSisters {
 dividerLine
 echo "fetching sisters"
@@ -116,6 +190,7 @@ jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_l
 # incomplete; jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json rs.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "directory.json"))[0].object | map(select((.members | length) == 1)) | map(.name) as $singleMembers | $all | map(select(.filename == "rs.json"))[0].object[0].members | map(select([.name] as $targetMember | $singleMembers | contains($targetMember))) | map({name, age, address, phone, email, birthDayFormatted})' > single-sisters.json
 }
 
+# =======================
 function fetchMembersWithCallings {
 dividerLine
 echo "fetching members with callings"
@@ -130,6 +205,7 @@ sleep 2
 jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map({name, age: .actualAge, birthDay: .birthDayFormatted}) as $eqInfo | $all | map(select(.filename == "members-with-callings.json"))[0].object | map({name, position, organization, unitName}) as $mwcInfo | map(select(.gender == "MALE" and ([.organization] as $organization | ((["Aaronic Priesthood Quorums", "Primary", "Bishopric", "High Council"] | contains($organization)) or (.organization | contains("Stake"))) ) )) | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember)))  | map({name, district: ($household | .district), neighborhood: ($household | .neighborhood), address: $household.address, email, phone, age: (.name as $mName | $eqInfo | map(select(.name == $mName))[0].age), birthDay: (.name as $mName | $eqInfo | map(select(.name == $mName))[0].birthDay), positions: (.name as $mName | $mwcInfo | map(select(.name == $mName)) | reverse | map({unitName, organization, position})) })[0]) | map(select((. == null | not) and (.age == null | not)))| sort_by(.district, .positions[0].organization, .name)' > eq-members-with-aux-positions.json
 }
 
+# =======================
 function fetchElders {
 dividerLine
 echo "fetching elders"
@@ -143,6 +219,7 @@ eqWip=$(cat eq.json | jq '.[0] as $head | $head.filterOffices | reduce .[] as $i
 echo "$eqWip" | jq ''"$jqNeighborhood"'; '"$jqDistrict"'; map(. as $orig | (.address | district) as $district | (.address | neighborhood) as $neighborhood | $orig + {$district} + {$neighborhood})' > eq-cleaned.json
 }
 
+# =======================
 function transformDirectory {
 dividerLine
 echo "transforming directory (e.g., reduce strings, alloy buildings)"
@@ -168,6 +245,7 @@ elif (. | test( "Unt M"; "i" )) then "alloy-m"
 elif (. | test( "Unt N"; "i" )) then "alloy-n" 
 elif (. | test( "Unt P"; "i" )) then "alloy-p" 
 elif (. | test( "Unt Q"; "i" )) then "alloy-q" 
+elif (. | test( " 20 W"; "i" )) then "waters-edge" 
 else "z-not-available" end'
 
 jqDistrict='def district: 
@@ -193,6 +271,7 @@ elif (. | test( "Unt M"; "i" )) then "district-01"
 elif (. | test( "Unt N"; "i" )) then "district-01" 
 elif (. | test( "Unt P"; "i" )) then "district-01" 
 elif (. | test( "Unt Q"; "i" )) then "district-01" 
+elif (. | test( " 20 W"; "i" )) then "district-01" 
 else "district-unassigned" end'
 
 cat directory-orig.json | jq ''"$jqNeighborhood"'; '"$jqDistrict"'; map(. as $orig | (.address | district) as $district | (.address | neighborhood) as $neighborhood | $orig + {$district} + {$neighborhood})' > directory.json
@@ -223,6 +302,7 @@ cat directory-orig.json | jq ''"$jqNeighborhood"'; '"$jqDistrict"'; map(. as $or
 # cat directory.json | jq '. | reduce .[] as $entry ([]; . + ($entry.members | map({uuid, name, phone, email, address: $entry.address, district: $entry.district})))' > directory-cleaned.json
 }
 
+# =======================
 function fetchDirectory {
 dividerLine
 echo "fetching directory"
@@ -237,6 +317,7 @@ sleep 2
 cp directory.json directory-orig.json
 }
 
+# =======================
 function fetchMinisteringAssignments {
 dividerLine
 echo "fetching ministering assignments"
@@ -267,6 +348,7 @@ curl 'https://lcr.churchofjesuschrist.org/ministering?lang=eng&type=EQ' \
 sleep 2
 }
 
+# =======================
 function fetchProposedMinisteringAssignments {
 dividerLine
 echo "fetching proposed ministering assignments"
@@ -297,6 +379,7 @@ curl 'https://lcr.churchofjesuschrist.org/ministering-proposed-assignments?lang=
 sleep 2
 }
 
+# =======================
 function fetchYW {
 dividerLine
 echo "fetching yw"

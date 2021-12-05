@@ -2,12 +2,22 @@
   <div class="yearbook">
     <div class="filters">
       Filters (include): 
+      <span>Residential</span>
+      <input type="radio" id="filter-type-residential" name="filter-type" v-model="filterType" value="residential"/> <label for="filter-type-residential">Residential</label>
+      <input type="radio" id="filter-type-ministering" name="filter-type" v-model="filterType" value="ministering"/> <label for="filter-type-ministering">Ministering</label>
+    </div>
+
+    <div class="filters">
+      Filters (include): 
+      <span>Ministering</span>
       <input type="checkbox" id="district-01" v-model="filters.district01.value" /> <label for="district-01">District 1</label>
       <input type="checkbox" id="district-02" v-model="filters.district02.value" /> <label for="district-02">District 2</label>
       <input type="checkbox" id="district-03" v-model="filters.district03.value" /> <label for="district-03">District 3</label>
+      <input type="checkbox" id="district-unassigned" v-model="filters.unassigned.value" /> <label for="district-unassigned">Unassigned</label>
+      <!--
       <input type="checkbox" id="alloy" v-model="filters.alloy.value" /> <label for="alloy">Alloy</label>
       <input type="checkbox" id="sterling-loop" v-model="filters['sterling-loop'].value" /> <label for="sterling-loop">Sterling Loop</label>
-      <input type="checkbox" id="district-unassigned" v-model="filters.unassigned.value" /> <label for="district-unassigned">Unassigned</label>
+      -->
     </div>
 
     <div><button @click="savePhotoAttributes">save</button> | <button @click="loadPhotoAttributes">load</button></div>
@@ -35,10 +45,16 @@ export default {
     return {
       yearbook: [],
       photoModifications: {},
+      filterType: 'residential',
       filters: {
         district01: {value: true, id: '01'},
         district02: {value: true, id: '02'},
         district03: {value: true, id: '03'},
+
+        ministeringDistrict01: {value: false, id: '01'},
+        ministeringDistrict02: {value: false, id: '02'},
+        ministeringDistrict03: {value: false, id: '03'},
+
         alloy: {value: false, id: 'alloy'},
         'sterling-loop': {value: false, id: 'sterling-loop'},
         unassigned: {value: false, id: 'unassigned'},
@@ -48,8 +64,17 @@ export default {
   },
   computed: {
     filteredYearbook: function() {
-      const activeDistrictIds = Object.keys(this.filters).filter(key => this.filters[key].value).map(key => this.filters[key].id)
-      return this.yearbook.filter(entry => activeDistrictIds.some(id => entry.district.includes(id)))
+      const activeFilters = Object.keys(this.filters).filter(key => this.filters[key].value)
+      const activeDistrictIds = activeFilters.map(key => this.filters[key].id)
+      // return this.yearbook.filter(entry => activeDistrictIds.some(id => entry.district.includes(id)) || activeDistrictIds.some(id => entry.ministeringDistrict.includes(id)))
+      const compareProperty = (this.filterType === 'residential') ? 'district' : 'ministeringDistrict'
+      let activeYearBookEntries = this.yearbook.filter(entry => activeDistrictIds.some(id => entry[compareProperty] && entry[compareProperty].includes(id)))
+
+      console.log(">>>activeFilters", activeFilters)
+      if (activeFilters.includes('unassigned')) 
+        activeYearBookEntries = activeYearBookEntries.concat(this.yearbook.filter(entry => activeDistrictIds.some(id => !entry[compareProperty])))
+
+      return activeYearBookEntries
     },
     photoModificationsLoaded: function() {
       return (this.photoModifications && Object.keys(this.photoModifications).length > 0)

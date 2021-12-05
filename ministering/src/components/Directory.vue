@@ -175,7 +175,7 @@ export default {
       selectedNameIds: [],
       autocompleteValue: '',
       sortOptionsInput: '',
-      supportedSortOptions: 'name,phone,email,address,district,neighborhood'.split(/,/),
+      supportedSortOptions: 'name,phone,email,address,district,neighborhood,companionshipId'.split(/,/),
       hoverNameIdx: -1,
       states: [],
       stateIdx: -1,
@@ -253,6 +253,7 @@ export default {
       if (!this.sortOptions)
         _selectedNames = _selectedNames
           .sort(sortEntries('companionshipId'))
+          // .sort(sortEntries('name'))
 
       this.selectedNameIds = _selectedNames.map(entry => entry.id)
     },
