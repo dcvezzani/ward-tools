@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =======================
-function loadCookies() {
+function loadCookies {
 lines=$(cat cookie.txt | perl -p -e 's# #\n#g' | grep 'ChurchSSO\|Church-auth-jwt-prod\|directory_access_token\|directory_refresh_token\|directory_identity_token')
 authorization_token=$(cat cookie.txt | perl -p -e 's#^.*authorization: Bearer ([^'"'"']*).*#\1#g')
 refresh_token=$(cat cookie.txt | perl -p -e 's#^.*-H '"'"'x-refresh: ([^'"'"']*).*#\1#g')
@@ -26,10 +26,8 @@ echo "Load these cookies? (Enter=yes; Ctrl-C=no)"
 read cont
 }
 
-# s/Church-auth-jwt-prod[^;]*;/Church-auth-jwt-prod='"${ChurchAuthJwtProd}"';/gc
-
 # =======================
-function fetchElders() {
+function fetchElders {
 echo "fetching elder data"
 
 # eldersData=$(jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember))) | map({name, id, district: ($household | .district), address: $household.address, email, phone})[0]) as $elderDetails | $elderDetails | map(select(.id != null) | .id) as $ids | $all | map(select(.filename == "directory.json"))[0].object | map(.members | map(. as $targetMember | $targetMember | select($ids | contains([$targetMember | .id])))) | flatten | map({id, householdUuid, name, district: (.name as $mName | $elderDetails | map(select(.name == $mName))[0].district)})')
@@ -38,7 +36,7 @@ eldersData=$(cat eq-cleaned.json | jq 'map({id, name, district})')
 }
 
 # =======================
-function fetchElderMinisteringAssignments() {
+function fetchElderMinisteringAssignments {
 echo "fetching elder ministering assignments"
 
 # eldersData=$(jq -n 'inputs | {"object": . , "filename": input_filename, "lineNumber": input_line_number}' directory.json members-with-callings.json eq-cleaned.json | jq -ns 'inputs' | jq '. as $all | $all | map(select(.filename == "eq-cleaned.json"))[0].object | map(.name) as $targetMembers | $all | map(select(.filename == "directory.json"))[0].object | map(. as $household | .members | map(select([.name] as $targetMember | $targetMembers | contains($targetMember))) | map({name, id, district: ($household | .district), address: $household.address, email, phone})[0]) as $elderDetails | $elderDetails | map(select(.id != null) | .id) as $ids | $all | map(select(.filename == "directory.json"))[0].object | map(.members | map(. as $targetMember | $targetMember | select($ids | contains([$targetMember | .id])))) | flatten | map({id, householdUuid, name, district: (.name as $mName | $elderDetails | map(select(.name == $mName))[0].district)})')
@@ -47,7 +45,7 @@ ministeringData=$(cat ministering-brothers.json | jq 'map({id: .legacyCmisId, di
 }
 
 # =======================
-function transformEldersMinisteringAssignments() {
+function transformEldersMinisteringAssignments {
 echo "transform elder ministering assignments"
 
 local jqPayload=$(cat <<-EOL
@@ -68,14 +66,14 @@ eldersData=$(echo "$jqPayload" | jq -r "${findMinisteringAssignment};"' .eldersD
 }
 
 # =======================
-function writeYearbook() {
+function writeYearbook {
 echo "writing yearbook data"
 
 echo "$eldersData" | perl -p -e "s#'##g" | jq 'map(. as $elder | $elder | (.name | gsub("[., -]+"; "-") | ascii_downcase) as $namePath | "/photos/" as $path | $elder + {"elderPhoto": ($path + $namePath + ".png"), "familyPhoto": ($path + $namePath + "-family.png")})' > yearbook.json
 }
 
 # =======================
-photo_exists () {
+function photo_exists {
   local filename="$1"
   local ignore="$2"
   local check_filesize=$(stat -f%z "$filename" | xargs)
@@ -87,17 +85,17 @@ photo_exists () {
   # ignore="placeholders,emptyfile,filenotexist"
   echo ",$ignore," | grep ',placeholders,' &> /dev/null
   retVal="$?"
-  if [ "$retVal" == "0" ]; then
+  if [ "$retVal" = "0" ]; then
       ignore_placeholder=true
   fi
   echo ",$ignore," | grep ',emptyfile,' &> /dev/null
   retVal="$?"
-  if [ "$retVal" == "0" ]; then
+  if [ "$retVal" = "0" ]; then
       ignore_emptyfile=true
   fi
   echo ",$ignore," | grep ',filenotexist,' &> /dev/null
   retVal="$?"
-  if [ "$retVal" == "0" ]; then
+  if [ "$retVal" = "0" ]; then
       ignore_filenotexist=true
   fi
 
@@ -122,7 +120,7 @@ photo_exists () {
 }
 
 # =======================
-fetch_photo_using_tokenurl () {
+function fetch_photo_using_tokenurl {
 
   local id="$1"
   local filename="$2"
@@ -136,9 +134,9 @@ fetch_photo_using_tokenurl () {
     return
   fi
   
-  # echo "fetching image for $imageTokenUrl > $filename =" ''"${imageTokenUrl}"'/MEDIUM'
-  echo "fetching image for $id, $imageTokenUrl > $filename"
-curl ''"${imageTokenUrl}"'/MEDIUM' \
+  url=''"${imageTokenUrl}"'/MEDIUM'
+  echo "fetching image for $id, $url > $filename"
+curl "$url" \
   -H 'Connection: keep-alive' \
   -H 'Cache-Control: max-age=0' \
   -H 'sec-ch-ua: " Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"' \
@@ -159,12 +157,17 @@ sleep 2
 }
 
 # =======================
-fetch_individual_photo () {
-  local id="$1"
-  local filename="$2"
+function get_photo_token {
+  local type="$1"
+  local id="$2"
 
-  echo "fetching image token for $id > imageTokenUrl =" 'https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-individual/'"${id}"'?lang=eng'
-payload=$(curl 'https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-individual/'"${id}"'?lang=eng' \
+  url='https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-individual/'"${id}"'?lang=eng'
+  if [ "$type" = "household" ]; then
+    url='https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/'"${id}"'?lang=eng&type=HOUSEHOLD'
+  fi
+
+  echo "fetching image token for $id > imageTokenUrl =" "$url" >&2
+payload=$(curl "$url" \
   -H 'Connection: keep-alive' \
   -H 'Pragma: no-cache' \
   -H 'Cache-Control: no-cache' \
@@ -176,13 +179,37 @@ payload=$(curl 'https://lcr.churchofjesuschrist.org/services/photos/manage-photo
   -H 'Sec-Fetch-Site: same-origin' \
   -H 'Sec-Fetch-Mode: cors' \
   -H 'Sec-Fetch-Dest: empty' \
-  -H 'Referer: https://lcr.churchofjesuschrist.org/records/member-profile/3676616600?lang=eng&unitNumber=13730' \
+  -H 'Referer: https://lcr.churchofjesuschrist.org/records/member-profile/'"${id}"'?lang=eng&unitNumber=13730' \
   -H 'Accept-Language: en-US,en;q=0.9' \
   -H 'Cookie: ChurchSSO='"${ChurchSSO}"'' \
   --compressed)
 
+#   echo "fetching image token for $id > imageTokenUrl =" 'https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/'"${id}"'?lang=eng&type=HOUSEHOLD'
+# imageTokenUrl=$(curl 'https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/'"${id}"'?lang=eng&type=HOUSEHOLD' \
+#   -H 'Connection: keep-alive' \
+#   -H 'sec-ch-ua: " Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"' \
+#   -H 'Accept: application/json, text/plain, */*' \
+#   -H 'sec-ch-ua-mobile: ?0' \
+#   -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36' \
+#   -H 'Sec-Fetch-Site: same-origin' \
+#   -H 'Sec-Fetch-Mode: cors' \
+#   -H 'Sec-Fetch-Dest: empty' \
+#   -H 'Referer: https://lcr.churchofjesuschrist.org/records/member-profile/'"${id}"'?lang=eng' \
+#   -H 'Accept-Language: en-US' \
+#   -H 'Cookie: ChurchSSO='"${ChurchSSO}"'' \
+#   --compressed | jq -r '.image.tokenUrl')
+
+
 # echo "image token payload: $payload"
-imageTokenUrl=$(echo "$payload" | jq -r '.image.tokenUrl')
+echo "$payload" | jq -r '.image.tokenUrl'
+}
+
+# =======================
+function fetch_individual_photo {
+  local id="$1"
+  local filename="$2"
+
+  imageTokenUrl=$(get_photo_token "individual" "$id")
 
 # sleep 1
 
@@ -191,24 +218,11 @@ fetch_photo_using_tokenurl "$id" "$filename" "$imageTokenUrl"
 }
 
 # =======================
-fetch_household_photo () {
+function fetch_household_photo {
   local id="$1"
   local filename="$2"
 
-  echo "fetching image token for $id > imageTokenUrl =" 'https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/'"${id}"'?lang=eng&type=HOUSEHOLD'
-imageTokenUrl=$(curl 'https://lcr.churchofjesuschrist.org/services/photos/manage-photos/approved-image-household/'"${id}"'?lang=eng&type=HOUSEHOLD' \
-  -H 'Connection: keep-alive' \
-  -H 'sec-ch-ua: " Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"' \
-  -H 'Accept: application/json, text/plain, */*' \
-  -H 'sec-ch-ua-mobile: ?0' \
-  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36' \
-  -H 'Sec-Fetch-Site: same-origin' \
-  -H 'Sec-Fetch-Mode: cors' \
-  -H 'Sec-Fetch-Dest: empty' \
-  -H 'Referer: https://lcr.churchofjesuschrist.org/records/member-profile/'"${id}"'?lang=eng' \
-  -H 'Accept-Language: en-US' \
-  -H 'Cookie: ChurchSSO='"${ChurchSSO}"'' \
-  --compressed | jq -r '.image.tokenUrl')
+  imageTokenUrl=$(get_photo_token "household" "$id")
 
 # sleep 1
 
@@ -216,7 +230,7 @@ imageTokenUrl=$(curl 'https://lcr.churchofjesuschrist.org/services/photos/manage
 }
 
 # =======================
-fetch_photo () {
+function fetch_photo {
   local scope="$1"
   local id="$2"
   local filename="photos/$3.png"
@@ -227,11 +241,11 @@ fetch_photo () {
 
   # echo "fetching image for $scope, $id > $filename"
   
-  if [ "$scope" == "members" ]; then
+  if [ "$scope" = "members" ]; then
       fetch_individual_photo "$id" "$filename"
   fi
 
-  if [ "$scope" == "households" ]; then
+  if [ "$scope" = "households" ]; then
       fetch_household_photo "$id" "$filename"
   fi
 
@@ -245,7 +259,7 @@ fetch_photo () {
 }
 
 # =======================
-apply_placeholder () {
+function apply_placeholder {
   echo
   local photoCount=$(ls -1 ./photos | xargs | wc -w | xargs)
   echo "Applying placeholders for elders and families without photos (count ${photoCount})..."
@@ -275,7 +289,7 @@ apply_placeholder () {
 }
 
 # =======================
-download_missing_photos () {
+function download_missing_photos {
   local scope="$1"
   local id="$2"
   local name="$3"
@@ -295,7 +309,7 @@ download_missing_photos () {
 }
 
 # =======================
-all_elders () {
+function all_elders {
   for data in $(echo "$eldersData" | perl -p -e "s#'##g" | jq -r '. | map((.id | tostring) + ":" + (.name | gsub("[., -]+"; "-") | ascii_downcase)) | join("\n")'); do
     name=$(echo "${data#*:}" | xargs)
     id=$(echo "${data%:*}" | xargs)
@@ -304,7 +318,7 @@ all_elders () {
 }
 
 # =======================
-all_families () {
+function all_families {
   for data in $(echo "$eldersData" | perl -p -e "s#'##g" | jq -r '. | map((.id | tostring) + ":" + (.name | gsub("[., -]+"; "-") | ascii_downcase + "-family")) | join("\n")'); do
     name=$(echo "${data#*:}" | xargs)
     id=$(echo "${data%:*}" | xargs)
@@ -314,7 +328,7 @@ all_families () {
 }
 
 # =======================
-retry_elders () {
+function retry_elders {
   echo
   echo "Retry getting photos for elders..."
   for data in $(echo "$eldersData" | perl -p -e "s#'##g" | jq -r '. | map((.id | tostring) + ":" + (.name | gsub("[., -]+"; "-") | ascii_downcase)) | join("\n")'); do
@@ -326,7 +340,7 @@ retry_elders () {
 }
 
 # =======================
-retry_families () {
+function retry_families {
   echo
   echo "Retry getting photos for elder families..."
   for data in $(echo "$eldersData" | perl -p -e "s#'##g" | jq -r '. | map((.id | tostring) + ":" + (.name | gsub("[., -]+"; "-") | ascii_downcase + "-family")) | join("\n")'); do
@@ -336,25 +350,78 @@ retry_families () {
   done
 }
 
-# fetch_photo members 3694966261 lastname-firstname false
-# fetch_photo households 3694966261 lastname-firstname-family false
+echo "Get copy of LCR curl; paste in ./cookies.txt"
+read cont
+loadCookies
 
-# fetch_photo households 9788020985 farmer-kade-family
-# fetch_photo households 43938146779 burmer-tom-family
-
+# =======================
+function initializeGetPhotos {
 fetchElders
 fetchElderMinisteringAssignments
 transformEldersMinisteringAssignments
 
 writeYearbook
+}
+
+# =======================
+function getPhotosFor {
+  local id="$1"
+  local name="$2"
+
+fetch_photo members "$id" "$name"
+fetch_photo households "$id" "${name}-family"
+}
+
+# =======================
+function syncAll {
+initializeGetPhotos
+
+retry_elders
+retry_families
+apply_placeholder
+}
+
+
+
+if [ "$SOURCE_ONLY" = "yes" ]; then
+  echo "\nPhoto functions loaded"
+  echo "Usage: syncAll"
+else
+  syncAll
+fi
+
+
+
+# === ARCHIVE =======================
+
+function __archive__ {
+fetch_photo members 3694966261 lastname-firstname false
+fetch_photo households 3694966261 lastname-firstname-family false
+
+fetch_photo households 9788020985 farmer-kade-family
+fetch_photo households 43938146779 burmer-tom-family
+fetch_photo members 3694966261 vezzani-david
+
+getPhotosFor 2594682565 powell-tim
+getPhotosFor 1699810481 claybaugh-chad
+getPhotosFor 20475787768 gurrola-v-román
+getPhotosFor 13871409866 olive-cody
+getPhotosFor 5698697733 vincent-alan
+getPhotosFor 668506844 lamb-barry
+
+    "name": "lamb, barry",
+    "id": 668506844,
+
+
+
+    "name": "Olive, Cody",
+    "id": 13871409866,
+
+}
 
 # echo "Get copy of LCR curl; paste in ./cookies.txt"
 # read cont
 # loadCookies
-
-# retry_elders
-# retry_families
-# apply_placeholder
 
 # filename="photos/burmer-tom.png"
 # photo_exists "$filename" ignore,placeholders
@@ -364,4 +431,7 @@ writeYearbook
 #       echo "missing photo for $filename; copying placeholder"
 #       cp profile-placeholder.png "$filename"
 #     fi
+
+# s/Church-auth-jwt-prod[^;]*;/Church-auth-jwt-prod='"${ChurchAuthJwtProd}"';/gc
+
 

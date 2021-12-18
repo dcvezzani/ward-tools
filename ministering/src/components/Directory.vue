@@ -18,6 +18,10 @@
     </div>
 
     <div>
+      <button @click="addAllEqPresNames">All EQ Pres</button>
+    </div>
+
+    <div>
       <button @click="addAllEqNames">All EQ</button>
       <button @click="addAllEqInAuxNames">All EQ in Aux</button>
       <button @click="addAllRsNames">All RS</button>
@@ -73,6 +77,12 @@
         <br>
         <textarea id="email-values-only" v-model="emailValuesOnly" name="" cols="30" rows="10"></textarea>
       </div>
+
+      <div style="display: inline-block;">
+        Phone Numbers
+        <br>
+        <textarea id="email-values-only" v-model="phoneNumberValuesOnly" name="" cols="30" rows="10"></textarea>
+      </div>
     </div>
   
   </div>
@@ -82,6 +92,7 @@
 import Vue from 'vue'
 import directoryNames from '../../../directory-contact-info.json'
 import eqNames from '../../../eq-cleaned.json'
+import eqPresNames from '../../../eq-pres-members.json'
 import eqInAuxNames from '../../../eq-members-with-aux-positions.json'
 import eqNamesDistrict01 from '../../../ministering-assignments-district-01.json'
 import eqNamesDistrict02 from '../../../ministering-assignments-district-02.json'
@@ -212,6 +223,9 @@ export default {
     emailValuesOnly: function(){
       return this.selectedNameIds.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries('email')).map(entry => entry.email).join("\n")
     },
+    phoneNumberValuesOnly: function(){
+      return this.selectedNameIds.map(id => this.names.filter(entry => entry.id === id)[0]).sort(sortEntries('phone')).map(entry => entry.phone).join("\n")
+    },
     queueTextMessageLink: function(){
       let stagedIds = this.selectedNames.filter(entry => {
         return entry.selected
@@ -256,6 +270,11 @@ export default {
           // .sort(sortEntries('name'))
 
       this.selectedNameIds = _selectedNames.map(entry => entry.id)
+    },
+    addAllEqPresNames: function(){
+      const _eqPresNames = eqPresNames.map(entry => entry.name)
+      const _doNotContact = doNotContact.map(entry => entry.name)
+      this.selectedNameIds = this.names.filter(entry => (_eqPresNames.includes(entry.name) && !_doNotContact.includes(entry.name))).map(entry => entry.id)
     },
     addAllEqNames: function(){
       const _eqNames = eqNames.map(entry => entry.name)
